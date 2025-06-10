@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 
 export const load = (async ({ locals }) => {
-	if (!locals.pb.authStore.isValid) {
+	if (!locals.sb.authStore.isValid) {
 		throw redirect(303, '/login');
 	}
 
@@ -18,7 +18,7 @@ export const load = (async ({ locals }) => {
 
 export const actions = {
 	logout: async ({ locals }) => {
-		locals.pb.authStore.clear();
+		locals.sb.authStore.clear();
 		locals.user = null;
 
 		redirect(303, '/login');
