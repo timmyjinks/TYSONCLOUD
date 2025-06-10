@@ -1,26 +1,20 @@
-import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 
-export const load = (async ({ locals }) => {
-	if (!locals.sb.authStore.isValid) {
-		throw redirect(303, '/login');
-	}
-
-	const response = await fetch(`http://backend:8000/databases?username=${locals.user?.username}`);
-
-	const data = await response.json();
-
-	return {
-		databases: data.reverse(),
-		user: locals.user
-	};
-}) satisfies PageServerLoad;
-
 export const actions = {
-	logout: async ({ locals }) => {
-		locals.sb.authStore.clear();
-		locals.user = null;
+	delete: async ({ request }) => {
+		const formData = await request.formData();
+		const name = formData.get('name').replace(/[^a-zA-Z0-9-_]/g, '') as string;
+		const image = formData.get('image').replace(/[^a-zA-Z]/g, '') as string;
 
-		redirect(303, '/login');
+		await fetch('http://backend:8000/delete', {
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				name: name,
+				image: image
+			})
+		});
+
+		throw redirect(303, '/');
 	}
 };
