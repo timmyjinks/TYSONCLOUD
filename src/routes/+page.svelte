@@ -5,10 +5,10 @@
 	let showEditModal = false;
 	let showDeleteModal = false;
 	let selectedDeployment = null;
-	let isLoading = false;
+	let loading = false;
+	let loggingOut = false;
 	export let data;
 	export let form;
-	console.log(form);
 
 	function openCreateModal() {
 		showCreateModal = true;
@@ -29,7 +29,7 @@
 		showEditModal = false;
 		showDeleteModal = false;
 		selectedDeployment = null;
-		isLoading = false;
+		loading = false;
 	}
 
 	// Utility functions
@@ -60,7 +60,8 @@
 	}
 
 	$: if (form?.error) {
-		isLoading = false;
+		loading = false;
+		loggingOut = false;
 	}
 </script>
 
@@ -87,7 +88,13 @@
 					</svg>
 					<span>New Deployment</span>
 				</button>
-				<form action="?/logout" method="post">
+				<form
+					action="?/logout"
+					use:enhance={() => {
+						loggingOut = true;
+					}}
+					method="post"
+				>
 					<button
 						class="flex items-center space-x-2 rounded-2xl bg-red-600 px-6 py-3 font-semibold text-white shadow-xl transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-2xl disabled:bg-red-400"
 						type="submit"
@@ -100,7 +107,7 @@
 								d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
 							/>
 						</svg>
-						<span>{isLoading ? 'Logging out...' : 'Logout'}</span>
+						<span>{loggingOut ? 'Logging out...' : 'Logout'}</span>
 					</button>
 				</form>
 			</div>
@@ -192,7 +199,11 @@
 			<form
 				action="?/create"
 				use:enhance={() => {
-					isLoading = true;
+					loading = true;
+					return async ({ update }) => {
+						await update();
+						closeModals();
+					};
 				}}
 				method="post"
 				class="space-y-4"
@@ -231,23 +242,13 @@
 						Cancel
 					</button>
 
-					{#if isLoading}
-						<button
-							type="submit"
-							disabled={isLoading}
-							class="flex-1 rounded-2xl bg-blue-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-blue-700 disabled:opacity-50"
-						>
-							Creating...
-						</button>
-					{:else}
-						<button
-							type="submit"
-							disabled={isLoading}
-							class="flex-1 rounded-2xl bg-blue-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-blue-700 disabled:opacity-50"
-						>
-							Create
-						</button>
-					{/if}
+					<button
+						type="submit"
+						disabled={loading}
+						class="flex-1 rounded-2xl bg-blue-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-blue-700 disabled:opacity-50"
+					>
+						{loading ? 'Create...' : 'Create'}
+					</button>
 				</div>
 			</form>
 		</div>
@@ -262,7 +263,18 @@
 		>
 			<h2 class="mb-6 text-2xl font-semibold text-white">Edit Deployment</h2>
 
-			<form action="?/update" method="post" class="space-y-4">
+			<form
+				action="?/update"
+				use:enhance={() => {
+					loading = true;
+					return async ({ update }) => {
+						await update();
+						closeModals();
+					};
+				}}
+				method="post"
+				class="space-y-4"
+			>
 				<div>
 					<input
 						type="text"
@@ -299,10 +311,10 @@
 					<input type="hidden" name="id" value={selectedDeployment?.id} />
 					<button
 						type="submit"
-						disabled={isLoading}
+						disabled={loading}
 						class="flex-1 rounded-2xl bg-blue-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-blue-700 disabled:opacity-50"
 					>
-						{isLoading ? 'Updating...' : 'Update'}
+						{loading ? 'Updating...' : 'Update'}
 					</button>
 				</div>
 			</form>
@@ -336,7 +348,18 @@
 					undone.
 				</p>
 
-				<form action="?/delete" method="post">
+				<form
+					action="?/delete"
+					use:enhance={() => {
+						loading = true;
+
+						return async ({ update }) => {
+							await update();
+							closeModals();
+						};
+					}}
+					method="post"
+				>
 					<div class="flex space-x-3">
 						<button
 							type="button"
@@ -348,10 +371,10 @@
 						<input type="hidden" name="id" value={selectedDeployment?.id} />
 						<button
 							type="submit"
-							disabled={isLoading}
+							disabled={loading}
 							class="flex-1 rounded-2xl bg-red-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-red-700 disabled:opacity-50"
 						>
-							{isLoading ? 'Deleting...' : 'Delete'}
+							{loading ? 'Deleting...' : 'Delete'}
 						</button>
 					</div>
 				</form>
