@@ -8,7 +8,7 @@
 	let { session, cookies } = $derived(data);
 
 	onMount(() => {
-		const { data } = cookies.auth.onAuthStateChange((event, newSession) => {
+		const { data } = cookies.auth.onAuthStateChange((_, newSession) => {
 			if (newSession?.expires_at !== session?.expires_at) {
 				invalidate('supabase:auth');
 			}
