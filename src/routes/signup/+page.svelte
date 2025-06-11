@@ -59,7 +59,7 @@
 
 		<!-- Sign Up Form -->
 		<div class="rounded-3xl border border-white/30 bg-white/20 p-8 shadow-2xl backdrop-blur-2xl">
-			<form action="?/signup" class="space-y-5">
+			<form action="?/signup" method="post" class="space-y-5">
 				<!-- Name Fields Row -->
 				<div class="grid grid-cols-2 gap-4"></div>
 
@@ -67,6 +67,7 @@
 				<div class="group relative">
 					<input
 						type="email"
+						name="email"
 						bind:value={email}
 						placeholder="Email"
 						class="w-full rounded-2xl border border-white/30 bg-white/90 px-6 py-4 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm transition-all duration-200 hover:bg-white/95 focus:-translate-y-0.5 focus:border-transparent focus:bg-white focus:shadow-lg focus:ring-2 focus:ring-pink-500 focus:outline-none"
@@ -79,6 +80,7 @@
 					<input
 						type="password"
 						bind:value={password}
+						name="password"
 						placeholder="Password"
 						class="w-full rounded-2xl border border-white/30 bg-white/90 px-6 py-4 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm transition-all duration-200 hover:bg-white/95 focus:-translate-y-0.5 focus:border-transparent focus:bg-white focus:shadow-lg focus:ring-2 focus:ring-pink-500 focus:outline-none"
 						required

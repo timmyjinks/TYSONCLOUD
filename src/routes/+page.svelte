@@ -1,10 +1,14 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
+
 	let showCreateModal = false;
 	let showEditModal = false;
 	let showDeleteModal = false;
 	let selectedDeployment = null;
 	let isLoading = false;
 	export let data;
+	export let form;
+	console.log(form);
 
 	function openCreateModal() {
 		showCreateModal = true;
@@ -25,6 +29,7 @@
 		showEditModal = false;
 		showDeleteModal = false;
 		selectedDeployment = null;
+		isLoading = false;
 	}
 
 	// Utility functions
@@ -52,6 +57,10 @@
 			hour: '2-digit',
 			minute: '2-digit'
 		});
+	}
+
+	$: if (form?.error) {
+		isLoading = false;
 	}
 </script>
 
@@ -180,7 +189,14 @@
 		>
 			<h2 class="mb-6 text-2xl font-semibold text-white">Create New Deployment</h2>
 
-			<form action="?/create" method="post" class="space-y-4">
+			<form
+				action="?/create"
+				use:enhance={() => {
+					isLoading = true;
+				}}
+				method="post"
+				class="space-y-4"
+			>
 				<div>
 					<input
 						type="text"
@@ -215,13 +231,23 @@
 						Cancel
 					</button>
 
-					<button
-						type="submit"
-						disabled={isLoading}
-						class="flex-1 rounded-2xl bg-blue-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-blue-700 disabled:opacity-50"
-					>
-						{isLoading ? 'Creating...' : 'Create'}
-					</button>
+					{#if isLoading}
+						<button
+							type="submit"
+							disabled={isLoading}
+							class="flex-1 rounded-2xl bg-blue-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-blue-700 disabled:opacity-50"
+						>
+							Creating...
+						</button>
+					{:else}
+						<button
+							type="submit"
+							disabled={isLoading}
+							class="flex-1 rounded-2xl bg-blue-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-blue-700 disabled:opacity-50"
+						>
+							Create
+						</button>
+					{/if}
 				</div>
 			</form>
 		</div>

@@ -1,4 +1,4 @@
-import { redirect } from '@sveltejs/kit';
+import { redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -20,7 +20,7 @@ export const actions = {
 		const name = formData.get('name') as string;
 		const image = formData.get('image') as string;
 
-		await fetch('http://localhost:8000/create', {
+		const response = await fetch('http://localhost:8000/create', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -30,7 +30,13 @@ export const actions = {
 			})
 		});
 
-		throw redirect(302, '/');
+		if (response.status == 200) {
+			throw redirect(303, '/');
+		} else {
+			return fail(400, {
+				error: 'Error creating container'
+			});
+		}
 	},
 	update: async ({ request }) => {
 		const formData = await request.formData();
