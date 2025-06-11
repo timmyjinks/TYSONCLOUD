@@ -1,7 +1,24 @@
 <script lang="ts">
 	import '../app.css';
+	import { invalidate } from '$app/navigation';
+	import { onMount } from 'svelte';
+	import { redirect } from '@sveltejs/kit';
 
-	let { children } = $props();
+	let { data, children } = $props();
+	let { session, cookies } = $derived(data);
+
+	onMount(() => {
+		const { data } = cookies.auth.onAuthStateChange((event, newSession) => {
+			if (newSession?.expires_at !== session?.expires_at) {
+				invalidate('supabase:auth');
+			}
+		});
+
+		return () => {
+			data.subscription.unsubscribe();
+			redirect(302, '/login');
+		};
+	});
 </script>
 
 {@render children()}
