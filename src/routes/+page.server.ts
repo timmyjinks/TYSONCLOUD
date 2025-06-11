@@ -30,9 +30,7 @@ export const actions = {
 			})
 		});
 
-		if (response.status == 200) {
-			throw redirect(303, '/');
-		} else {
+		if (response.status !== 200) {
 			return fail(400, {
 				error: 'Error creating container'
 			});
@@ -44,7 +42,7 @@ export const actions = {
 		const image = formData.get('image') as string;
 		const id = formData.get('id') as string;
 
-		await fetch('http://localhost:8000/update', {
+		const response = await fetch('http://localhost:8000/update', {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -54,13 +52,17 @@ export const actions = {
 			})
 		});
 
-		throw redirect(302, '/');
+		if (response.status !== 200) {
+			return fail(400, {
+				error: 'Error updating container'
+			});
+		}
 	},
 	delete: async ({ request }) => {
 		const formData = await request.formData();
 		const id = formData.get('id');
 
-		await fetch('http://localhost:8000/delete', {
+		const response = await fetch('http://localhost:8000/delete', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -68,10 +70,15 @@ export const actions = {
 			})
 		});
 
-		throw redirect(302, '/');
+		if (response.status !== 200) {
+			return fail(400, {
+				error: 'Error deleting container'
+			});
+		}
 	},
 	logout: async ({ locals }) => {
 		const { error } = await locals.supabase.auth.signOut();
+
 		if (error) {
 			console.log(error?.message);
 		}
