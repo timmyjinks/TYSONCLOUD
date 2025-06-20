@@ -1,12 +1,12 @@
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals: { safeGetSession } }) => {
-	const { session } = await safeGetSession();
-	if (session) {
+export const load: PageServerLoad = async ({ locals }) => {
+	const session = await locals.supabase.auth.getUser();
+	console.log(session);
+	if (session.data.user) {
 		redirect(302, '/');
 	}
-	return;
 };
 
 export const actions: Actions = {
@@ -22,6 +22,18 @@ export const actions: Actions = {
 			return fail(343, { error: error?.message });
 		} else {
 			redirect(302, '/');
+		}
+	},
+	googlesignup: async ({ locals: { supabase } }) => {
+		const { data, error } = await supabase.auth.signInWithOAuth({
+			provider: 'google',
+			options: {
+				redirectTo: 'http://localhost:5173/auth/callback'
+			}
+		});
+
+		if (data.url) {
+			redirect(302, data.url); // use the redirect API for your server framework
 		}
 	}
 };
