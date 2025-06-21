@@ -22,5 +22,17 @@ export const actions: Actions = {
 		} else {
 			redirect(302, '/');
 		}
+	},
+	googlesignup: async ({ locals: { supabase } }) => {
+		const { data, error } = await supabase.auth.signInWithOAuth({
+			provider: 'google',
+			options: {
+				redirectTo: 'https://tysoncloud.tysonjenkins.dev/auth/callback'
+			}
+		});
+
+		if (data.url) {
+			redirect(302, data.url); // use the redirect API for your server framework
+		}
 	}
 };

@@ -28,7 +28,7 @@ export const actions: Actions = {
 		const { data, error } = await supabase.auth.signInWithOAuth({
 			provider: 'google',
 			options: {
-				redirectTo: 'http://localhost:5173/auth/callback'
+				redirectTo: 'https://tysoncloud.tysonjenkins.dev/auth/callback'
 			}
 		});
 

@@ -148,20 +148,20 @@
 						<span>Continue with Google</span>
 					</button>
 				</div>
-				<div class="mt-8 border-t border-white/20 pt-6 text-center">
-					<p class="text-white/70">
-						Already have an account?
-						<a href="/login">
-							<button
-								type="button"
-								class="font-semibold text-white transition-all duration-200 hover:underline"
-							>
-								Sign up
-							</button>
-						</a>
-					</p>
-				</div>
 			</form>
+			<div class="mt-8 border-t border-white/20 pt-6 text-center">
+				<p class="text-white/70">
+					Already have an account?
+					<a href="/login">
+						<button
+							type="button"
+							class="font-semibold text-white transition-all duration-200 hover:underline"
+						>
+							Sign up
+						</button>
+					</a>
+				</p>
+			</div>
 		</div>
 	</div>
 </div>
