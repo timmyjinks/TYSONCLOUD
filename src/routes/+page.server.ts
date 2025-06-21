@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!session.data.user) {
 		redirect(302, '/login');
 	}
-	const response = await fetch(`http://localhost:8000/deployments?username=${locals.user?.email}`);
+	const response = await fetch(`http://backend:8000/deployments?username=${locals.user?.email}`);
 	const data = await response.json();
 
 	return {
