@@ -2,8 +2,9 @@ import { redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const { session } = await locals.safeGetSession();
-	if (!session) {
+	const session = await locals.supabase.auth.getUser();
+	console.log(session.data.user);
+	if (!session.data.user) {
 		redirect(302, '/login');
 	}
 	const response = await fetch(`http://localhost:8000/deployments?username=${locals.user?.email}`);
@@ -20,7 +21,7 @@ export const actions = {
 		const name = formData.get('name') as string;
 		const image = formData.get('image') as string;
 
-		const response = await fetch('http://localhost:8000/create', {
+		const response = await fetch('http://backend:8000/create', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -42,7 +43,7 @@ export const actions = {
 		const image = formData.get('image') as string;
 		const id = formData.get('id') as string;
 
-		const response = await fetch('http://localhost:8000/update', {
+		const response = await fetch('http://backend:8000/update', {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -62,7 +63,7 @@ export const actions = {
 		const formData = await request.formData();
 		const id = formData.get('id');
 
-		const response = await fetch('http://localhost:8000/delete', {
+		const response = await fetch('http://backend:8000/delete', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -79,6 +80,7 @@ export const actions = {
 	logout: async ({ locals }) => {
 		const { error } = await locals.supabase.auth.signOut();
 
+		console.log(locals.supabase.user);
 		if (error) {
 			console.log(error?.message);
 		}
