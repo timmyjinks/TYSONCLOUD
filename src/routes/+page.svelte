@@ -5,6 +5,7 @@
 	let showEditModal = false;
 	let showDeleteModal = false;
 	let selectedDeployment = null;
+	let env: [] = [];
 	let loading = false;
 	let loggingOut = false;
 	export let data;
@@ -15,6 +16,7 @@
 	}
 
 	function openEditModal(deployment) {
+		console.log(deployment);
 		selectedDeployment = deployment;
 		showEditModal = true;
 	}
@@ -30,6 +32,12 @@
 		showDeleteModal = false;
 		selectedDeployment = null;
 		loading = false;
+		env = [];
+	}
+
+	function deleteEnv() {
+		env.pop();
+		env = [...env];
 	}
 
 	// Utility functions
@@ -233,6 +241,38 @@
 					></textarea>
 				</div>
 
+				<h1 class="mb-6 text-2xl font-semibold text-white">Env</h1>
+				{#each env as e}
+					<div>
+						<input
+							class="w-[42%] resize-none rounded-2xl border border-white/30 bg-white/90 px-4 py-3 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+							type="text"
+							bind:value={e.key}
+							placeholder={e.key}
+						/>
+						<input
+							class="w-[42%] resize-none rounded-2xl border border-white/30 bg-white/90 px-4 py-3 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+							type="text"
+							bind:value={e.val}
+							placeholder={e.val}
+						/>
+					</div>
+				{/each}
+				<input type="hidden" name="env" value={JSON.stringify(env)} />
+				<button
+					type="button"
+					class="rounded-2xl border border-white/30 bg-white/20 px-8 py-4 font-semibold text-white backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/40 hover:bg-white/30 hover:shadow-2xl hover:backdrop-blur-lg"
+					on:click={() => {
+						env = [...env, { key: '', val: '' }];
+						console.log(env);
+					}}>+</button
+				>
+				<button
+					type="button"
+					class="rounded-2xl border border-white/30 bg-white/20 px-8 py-4 font-semibold text-white backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/40 hover:bg-white/30 hover:shadow-2xl hover:backdrop-blur-lg"
+					on:click={deleteEnv}>-</button
+				>
+
 				<div class="flex space-x-3 pt-4">
 					<button
 						type="button"
@@ -279,6 +319,7 @@
 					<input
 						type="text"
 						name="name"
+						value={selectedDeployment?.name}
 						placeholder="Deployment Name"
 						class="w-full rounded-2xl border border-white/30 bg-white/90 px-4 py-3 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					/>
