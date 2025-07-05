@@ -17,7 +17,7 @@
 	}
 
 	$: passwordsMatch = password && confirmPassword && password === confirmPassword;
-	$: canSubmit = email && password && confirmPassword && passwordsMatch && agreeToTerms;
+	$: canSubmit = email && password && confirmPassword && passwordsMatch;
 </script>
 
 <div
@@ -157,7 +157,7 @@
 							type="button"
 							class="font-semibold text-white transition-all duration-200 hover:underline"
 						>
-							Sign up
+							Sign in
 						</button>
 					</a>
 				</p>

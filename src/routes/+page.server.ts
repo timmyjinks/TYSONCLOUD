@@ -9,9 +9,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	try {
-		const response = await fetch(
-			`http://localhost:8000/deployments?username=${locals.user?.email}`
-		);
+		const response = await fetch(`http://backend:8000/deployments?username=${locals.user?.email}`);
 		const data = await response.json();
 
 		return {
@@ -35,7 +33,7 @@ export const actions = {
 			env[env_array[i].key] = env_array[i].val;
 		}
 
-		const response = await fetch('http://localhost:8000/create', {
+		const response = await fetch('http://backend:8000/create', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -78,7 +76,7 @@ export const actions = {
 		const formData = await request.formData();
 		const id = formData.get('id');
 
-		const response = await fetch('http://localhost:8000/delete', {
+		const response = await fetch('http://backend:8000/delete', {
 			method: 'DELETE',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
