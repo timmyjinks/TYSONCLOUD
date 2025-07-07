@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import Switch from '$lib/components/ui/switch/switch.svelte';
 
 	let showCreateModal = false;
 	let showEditModal = false;
@@ -8,6 +9,7 @@
 	let env: [] = [];
 	let loading = false;
 	let loggingOut = false;
+	let update = false;
 	export let data;
 	export let form;
 
@@ -229,8 +231,9 @@
 					<input
 						type="text"
 						name="image"
-						placeholder="Docker image"
+						placeholder="Docker image or Github repository"
 						class="w-full rounded-2xl border border-white/30 bg-white/90 px-4 py-3 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+						required
 					/>
 				</div>
 				<div>
@@ -325,19 +328,16 @@
 					/>
 				</div>
 				<div>
-					<input
-						type="text"
-						name="image"
-						placeholder="Docker image"
-						class="w-full rounded-2xl border border-white/30 bg-white/90 px-4 py-3 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-					/>
-				</div>
-				<div>
 					<textarea
 						placeholder="Description"
 						rows="3"
 						class="w-full resize-none rounded-2xl border border-white/30 bg-white/90 px-4 py-3 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
 					></textarea>
+				</div>
+				<div>
+					<label class="text-white" for="update-image">Update</label>
+					<Switch bind:checked={update} id="update" class="m-[15px]" />
+					<input type="hidden" name="update" value={update ? 'true' : 'false'} hidden />
 				</div>
 
 				<div class="flex space-x-3 pt-4">
