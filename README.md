@@ -69,7 +69,6 @@ This project is licensed under the [MIT License](LICENSE).
 - **Author**: Tyson Jenkins
 - **Portfolio**: [tysonjenkins.dev](https://tysonjenkins.dev)
 - **GitHub**: [timmyjinks](https://github.com/timmyjinks)
-- **Email**: contact@tysonjenkins.dev
 
 For issues or feature requests, please open an [Issue](https://github.com/timmyjinks/TYSONCLOUD-frontend/issues) on GitHub.
 
