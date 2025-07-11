@@ -45,12 +45,11 @@ Follow these steps to set up and run the TYSONCLOUD frontend locally.
    - Enter a Docker image (e.g., `nginx:latest`) or a GitHub repository URL (e.g., `https://github.com/username/repo`).
    - Follow the prompts to configure and deploy your application.
 3. **Monitor Deployments**:
-   - View active deployments and manage containers through the intuitive UI.
+   - View active deployments and manage containers through the intuitive UI.q
 
 ## Technology Stack
 - **Frontend**: [Svelte](https://svelte.dev/) for reactive, component-based UI development.
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) for responsive, utility-first design.
-- **Authentication**: Integrated with backend JWT-based auth (see [TYSONCLOUD-backend](https://github.com/timmyjinks/TYSONCLOUD-backend)).
 - **Deployment**: Hosted on [Cloudflare Pages](https://pages.cloudflare.com/) for fast, secure access.
 
 ## Contributing
