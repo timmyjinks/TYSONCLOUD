@@ -55,6 +55,16 @@ const authGuard: Handle = async ({ event, resolve }) => {
 		redirect(303, '/private');
 	}
 
+	const response = await resolve(event, {
+		filterSerializedResponseHeaders(name) {
+			return name === 'content-range' || name === 'x-supabase-api-version';
+		}
+	});
+
+	response.headers.set('Access-Control-Allow-Origin', '*'); // Adjust the origin as needed
+	response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+	response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
 	return resolve(event);
 };
 
