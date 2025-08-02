@@ -3,9 +3,8 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const session = await locals.supabase.auth.getUser();
-	console.log(session);
 	if (session.data.user) {
-		redirect(302, '/');
+		redirect(302, '/dashboard');
 	}
 };
 
@@ -21,7 +20,7 @@ export const actions: Actions = {
 			console.log(error);
 			return fail(343, { error: error?.message });
 		} else {
-			redirect(302, '/');
+			redirect(302, '/dashboard');
 		}
 	},
 	googlesignup: async ({ locals: { supabase } }) => {
