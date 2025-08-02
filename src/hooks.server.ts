@@ -58,4 +58,29 @@ const authGuard: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle: Handle = sequence(supabase, authGuard);
+const corsHandler: Handle = async ({ event, resolve }) => {
+	const response = await resolve(event);
+	const allowedOrigins = ['https://status.tysonjenkins.dev', 'https://tysoncloud.tysonjenkins.dev'];
+
+	const origin = event.request.headers.get('origin');
+	if (origin && allowedOrigins.includes(origin)) {
+		response.headers.set('Access-Control-Allow-Origin', origin);
+	}
+	response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+	response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+	if (event.request.method === 'OPTIONS') {
+		return new Response(null, {
+			status: 204,
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+				'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+				'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+			}
+		});
+	}
+
+	return response;
+};
+
+export const handle: Handle = sequence(supabase, authGuard, corsHandler);
