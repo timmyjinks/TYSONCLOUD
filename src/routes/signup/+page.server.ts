@@ -3,7 +3,6 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const session = await locals.supabase.auth.getUser();
-	console.log(session);
 	if (session.data.user) {
 		redirect(302, '/');
 	}
@@ -33,7 +32,7 @@ export const actions: Actions = {
 		});
 
 		if (data.url) {
-			redirect(302, data.url); // use the redirect API for your server framework
+			redirect(302, data.url);
 		}
 	}
 };

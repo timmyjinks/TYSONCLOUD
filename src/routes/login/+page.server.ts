@@ -32,7 +32,7 @@ export const actions: Actions = {
 		});
 
 		if (data.url) {
-			redirect(302, data.url); // use the redirect API for your server framework
+			redirect(302, data.url);
 		}
 	}
 };

@@ -1,8 +1,16 @@
 import { createServerClient } from '@supabase/ssr';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
+import { csrf } from './hooks/csrf';
 
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '$env/static/private';
+
+const allowedOrigins = [
+	'https://status.tysonjenkins.dev',
+	'https://tysoncloud.tysonjenkins.dev',
+	'https://tysoncloud-test.tysonjenkins.dev'
+];
+const allowedPaths = ['login', 'signup', 'create', 'update', 'delete', 'logout'];
 
 const supabase: Handle = async ({ event, resolve }) => {
 	event.locals.supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -60,7 +68,6 @@ const authGuard: Handle = async ({ event, resolve }) => {
 
 const corsHandler: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);
-	const allowedOrigins = ['https://status.tysonjenkins.dev', 'https://tysoncloud.tysonjenkins.dev'];
 
 	const origin = event.request.headers.get('origin');
 	if (origin && allowedOrigins.includes(origin)) {
@@ -84,4 +91,9 @@ const corsHandler: Handle = async ({ event, resolve }) => {
 	return response;
 };
 
-export const handle: Handle = sequence(supabase, authGuard, corsHandler);
+export const handle: Handle = sequence(
+	supabase,
+	authGuard,
+	corsHandler,
+	csrf(allowedPaths, allowedOrigins)
+);
