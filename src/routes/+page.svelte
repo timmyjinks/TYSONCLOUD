@@ -57,28 +57,6 @@
 		</div>
 	</section>
 
-	<section class="container mx-auto px-4 py-16">
-		<div class="mx-auto max-w-4xl overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900">
-			<div class="flex items-center gap-2 border-b border-zinc-800 bg-zinc-950 px-4 py-3">
-				<div class="h-3 w-3 rounded-full bg-red-500"></div>
-				<div class="h-3 w-3 rounded-full bg-yellow-500"></div>
-				<div class="h-3 w-3 rounded-full bg-green-500"></div>
-				<span class="ml-2 text-xs text-zinc-400">terminal</span>
-			</div>
-			<div class="p-6 font-mono text-sm">
-				<p class="text-green-500">$ nimbus deploy --app my-awesome-project</p>
-				<p class="mt-2 text-zinc-400">Initializing deployment...</p>
-				<p class="text-zinc-400">Packaging application...</p>
-				<p class="text-zinc-400">Uploading assets (2.4 MB)...</p>
-				<p class="text-zinc-400">Configuring environment...</p>
-				<p class="text-zinc-400">Starting containers...</p>
-				<p class="mt-2 text-red-400">✓ Deployment successful! Your app is live at:</p>
-				<p class="text-blue-400 underline">https://my-awesome-project.nimbuscloud.app</p>
-				<p class="mt-4 animate-pulse text-zinc-400">_</p>
-			</div>
-		</div>
-	</section>
-
 	<section class="container mx-auto px-4 py-24">
 		<h2 class="mb-16 text-center text-3xl font-bold md:text-4xl">
 			Everything you need to build at{' '}
