@@ -69,13 +69,8 @@
 
 		<!-- Deployments Section -->
 		<section>
-			<div class="mb-4 flex items-center justify-between">
+			<div class="mb-4">
 				<h2 class="text-xl font-semibold">Your Deployments</h2>
-				<button
-					class="rounded-md border border-zinc-700 bg-transparent px-3 py-1 text-sm text-zinc-400 hover:bg-zinc-900 hover:text-white"
-				>
-					View All
-				</button>
 			</div>
 
 			<!-- Deployment Cards -->
@@ -126,7 +121,7 @@
 							<button
 								class="rounded-md border border-zinc-700 bg-transparent px-3 py-1 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-white"
 							>
-								View Logs
+								Logs (Coming soon...)
 							</button>
 							<button
 								class="rounded-md bg-red-600 px-3 py-1 text-sm hover:bg-red-700"
@@ -162,16 +157,14 @@
 				</div>
 				<div class="rounded-lg border border-zinc-800 bg-zinc-900 p-5">
 					<p class="text-sm text-zinc-400">Total Requests (30d)</p>
-					<p class="mt-1 text-2xl font-bold">24.5k</p>
-					<p class="mt-1 text-sm text-zinc-500">(placeholder values)</p>
+					<p class="mt-1 text-2xl font-bold">0</p>
 				</div>
 				<div class="rounded-lg border border-zinc-800 bg-zinc-900 p-5">
 					<p class="text-sm text-zinc-400">Compute Usage</p>
-					<p class="mt-1 text-2xl font-bold">67%</p>
+					<p class="mt-1 text-2xl font-bold">0%</p>
 					<div class="mt-2 h-2 w-full rounded-full bg-zinc-800">
-						<div class="h-2 rounded-full bg-red-600" style="width: 67%"></div>
+						<div class="h-2 rounded-full bg-red-600" style="width: 0%"></div>
 					</div>
-					<p class="mt-1 text-sm text-zinc-500">(placeholder values)</p>
 				</div>
 			</div>
 		</section>

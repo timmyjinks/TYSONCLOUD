@@ -63,9 +63,10 @@ export const actions = {
 	},
 	update: async ({ request }) => {
 		const formData = await request.formData();
-		const name = formData.get('name') as string;
-		const update = formData.get('update') as boolean;
 		const id = formData.get('id') as string;
+		const new_name = formData.get('name') as string;
+		const update = formData.get('update') ? true : false;
+		const volume = formData.get('volume') as string;
 
 		const options = { timeout: 8000 };
 		const timeout = 8000;
@@ -79,8 +80,9 @@ export const actions = {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				id: id,
-				new_name: name,
-				update: update
+				new_name: new_name,
+				update: update,
+				volume: volume
 			})
 		});
 		clearTimeout(timer);

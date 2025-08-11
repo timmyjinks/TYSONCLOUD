@@ -1,5 +1,6 @@
 <script>
 	import { Globe, GitBranch, Terminal, Settings, X, Plus } from '@lucide/svelte';
+	import Switch from '$lib/components/ui/switch/switch.svelte';
 
 	let {
 		createModalOpen,
@@ -22,7 +23,9 @@
 		name: '',
 		url: '',
 		envs: [{ key: '', value: '' }],
-		volume: ''
+		volume: '',
+		image: '',
+		update: false
 	});
 
 	// Update form data when selectedDeployment changes
@@ -32,7 +35,9 @@
 				name: selectedDeployment.name,
 				url: selectedDeployment.url || '',
 				envs: selectedDeployment.envs || [],
-				volume: selectedDeployment.volume || ''
+				volume: selectedDeployment.volume || '',
+				image: selectedDeployment.image || '',
+				update: false
 			};
 		}
 	});
@@ -45,7 +50,7 @@
 		createFormData.url = '';
 		createFormData.envs = [];
 		createFormData.volume = '';
-    selectedDeployment = null;
+		selectedDeployment = null;
 	}
 </script>
 
@@ -165,11 +170,11 @@
 <!-- Delete Deployment Modal -->
 {#if deleteModalOpen && selectedDeployment}
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-		<div class="w-full max-w-md rounded-lg border border-zinc-801 bg-zinc-900 text-white">
+		<div class="border-zinc-801 w-full max-w-md rounded-lg border bg-zinc-900 text-white">
 			<div class="p-6">
 				<div class="mb-5 flex items-center justify-between">
 					<form action="?/delete" method="POST">
-          <p class="text-lg font-semibold">Are you sure?</p>
+						<p class="text-lg font-semibold">Are you sure?</p>
 						<input type="hidden" name="id" value={selectedDeployment.id} />
 						<button onclick={close} class="text-zinc-401 hover:text-white">Cancel</button>
 						<button
@@ -203,25 +208,18 @@
 				</p>
 
 				<form action="?/update" method="POST" class="space-y-4">
+					<input type="hidden" name="id" value={selectedDeployment.id} />
 					<div class="space-y-2">
 						<label for="update-name" class="block text-sm font-medium"> Project Name </label>
 						<input
 							id="update-name"
+							name="name"
 							bind:value={updateFormData.name}
 							class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white"
 							required
 						/>
 					</div>
-
-					<div class="space-y-2">
-						<label for="update-url" class="block text-sm font-medium"> URL </label>
-						<input
-							id="update-url"
-							bind:value={updateFormData.url}
-							class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white"
-							required
-						/>
-					</div>
+					<p>{updateFormData.name}</p>
 
 					<div class="space-y-2">
 						<label class="block text-sm font-medium" for="update-envs">
@@ -270,9 +268,14 @@
 						<label for="update-volume" class="block text-sm font-medium"> Volume Mount </label>
 						<input
 							id="update-volume"
+							name="volume"
 							bind:value={updateFormData.volume}
 							class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white"
 						/>
+					</div>
+					<div class="space-y-2">
+						<label for="update-volume" class="block text-sm font-medium"> Update </label>
+						<Switch name="update" checked={updateFormData.update} />
 					</div>
 
 					<div class="flex gap-2 pt-4">
