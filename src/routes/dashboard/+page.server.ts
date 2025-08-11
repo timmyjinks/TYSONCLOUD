@@ -11,7 +11,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 	try {
 		const response = await fetch(`${BACKEND_URL}/deployments?username=${locals.user?.email}`);
 		const data = await response.json();
-		console.log('data:', data);
 
 		return {
 			deployments: data
