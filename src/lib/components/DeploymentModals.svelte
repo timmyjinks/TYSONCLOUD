@@ -170,18 +170,27 @@
 <!-- Delete Deployment Modal -->
 {#if deleteModalOpen && selectedDeployment}
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-		<div class="border-zinc-801 w-full max-w-md rounded-lg border bg-zinc-900 text-white">
+		<div class="w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 text-white">
 			<div class="p-6">
 				<div class="mb-5 flex items-center justify-between">
 					<form action="?/delete" method="POST">
 						<p class="text-lg font-semibold">Are you sure?</p>
 						<input type="hidden" name="id" value={selectedDeployment.id} />
-						<button onclick={close} class="text-zinc-401 hover:text-white">Cancel</button>
-						<button
-							type="submit"
-							class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-							>Delete Deployment</button
-						>
+						<div class="flex gap-2 pt-4">
+							<button
+								type="button"
+								onclick={close}
+								class="rounded-md border border-zinc-700 bg-transparent px-4 py-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+							>
+								Cancel
+							</button>
+							<button
+								type="submit"
+								class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+							>
+								Delete Deployment
+							</button>
+						</div>
 					</form>
 				</div>
 			</div>
@@ -221,41 +230,38 @@
 					</div>
 					<p>{updateFormData.name}</p>
 
-					<div class="space-y-2">
-						<label class="block text-sm font-medium" for="update-envs">
-							Environment Variables
-						</label>
+					<div class="flex flex-col space-y-2">
+						<label class="block text-sm font-medium" for="envs"> Environment Variables </label>
 						<div class="space-y-2">
-							{#each updateFormData.envs as env, index}
+							{#each createFormData.envs as env, index}
 								<div class="flex gap-2">
 									<input
-										id={`update-env-key-${index}`}
+										id={`env-key-${index}`}
 										bind:value={env.key}
 										placeholder="KEY"
-										class="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500"
+										class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-2 py-2 text-sm text-white placeholder:text-zinc-500"
 									/>
 									<input
-										id={`update-env-value-${index}`}
+										id={`env-value-${index}`}
 										bind:value={env.value}
-										placeholder="value"
-										class="flex-1 rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500"
+										placeholder="VALUE"
+										class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-2 py-2 text-sm text-white placeholder:text-zinc-500"
 									/>
-									{#if updateFormData.envs.length > 1}
-										<button
-											type="button"
-											onclick={() =>
-												(updateFormData.envs = updateFormData.envs.filter((_, i) => i !== index))}
-											class="px-2 text-red-400 hover:text-red-300"
-										>
-											<X class="h-4 w-4" />
-										</button>
-									{/if}
+									<button
+										type="button"
+										onclick={() =>
+											(createFormData.envs = createFormData.envs.filter((_, i) => i !== index))}
+										class="px-2 text-red-400 hover:text-red-300"
+									>
+										<X class="h-4 w-4" />
+									</button>
 								</div>
+								<input type="hidden" name="env" value={JSON.stringify(createFormData.envs)} />
 							{/each}
 							<button
 								type="button"
 								onclick={() =>
-									(updateFormData.envs = [...updateFormData.envs, { key: '', value: '' }])}
+									(createFormData.envs = [...createFormData.envs, { key: '', value: '' }])}
 								class="flex items-center gap-1 text-sm text-red-400 hover:text-red-300"
 							>
 								<Plus class="h-3 w-3" />

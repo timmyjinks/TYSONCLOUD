@@ -30,7 +30,7 @@ export const actions = {
 
 		let env = {};
 		for (let i = 0; i < env_array.length; i++) {
-			env[env_array[i].key] = env_array[i].val;
+			env[env_array[i].key] = env_array[i].value;
 		}
 
 		const options = { timeout: 8000 };

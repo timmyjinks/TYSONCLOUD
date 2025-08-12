@@ -81,7 +81,11 @@
 							<div>
 								<h3 class="text-lg font-semibold">{deployment.name}</h3>
 								<div class="mt-1 flex items-center">
-									<span class="mr-2 inline-block h-2 w-2 rounded-full bg-green-500"></span>
+									{#if deployment.status == 'running'}
+										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-green-500"></span>
+									{:else}
+										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-red-500"></span>
+									{/if}
 									<span class="text-sm text-zinc-400 capitalize">{deployment.status}</span>
 								</div>
 							</div>
@@ -113,8 +117,8 @@
 						</div>
 
 						<div class="flex justify-between text-xs text-zinc-500">
-							<span>Last deployed {deployment.lastDeployed}</span>
-							<span>{deployment.region}</span>
+							<p>Last deployed</p>
+							<p>{new Date(deployment.last_deployed).toDateString()}</p>
 						</div>
 
 						<div class="mt-4 flex justify-between border-t border-zinc-800 pt-4">
