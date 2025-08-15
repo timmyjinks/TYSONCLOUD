@@ -59,7 +59,6 @@
 		</div>
 
 		<div class="mx-auto grid max-w-5xl gap-8 md:grid-cols-2">
-			<!-- Git Repository Deployment -->
 			<div
 				class="rounded-lg border border-zinc-800 bg-zinc-900 p-8 transition-colors hover:border-red-500/50"
 			>
@@ -79,7 +78,6 @@
 				</div>
 			</div>
 
-			<!-- Docker Image Deployment -->
 			<div
 				class="rounded-lg border border-zinc-800 bg-zinc-900 p-8 transition-colors hover:border-red-500/50"
 			>
