@@ -2,7 +2,7 @@
 	import { ArrowUpRight, Cloud, LogOut, Plus, Settings, Trash2 } from '@lucide/svelte';
 	import DeploymentModals from '$lib/components/DeploymentModals.svelte';
 
-	let { navigateTo, data } = $props();
+	let { data } = $props();
 
 	let createModalOpen = $state(false);
 	let updateModalOpen = $state(false);
@@ -22,14 +22,13 @@
 </script>
 
 <div class="min-h-screen bg-black text-white">
-	<!-- Header -->
 	<header class="border-b border-zinc-800">
 		<div class="container mx-auto px-4 py-4">
 			<div class="flex items-center justify-between">
-				<button onclick={() => navigateTo('/')} class="flex items-center gap-2">
+				<a href="/" class="flex items-center gap-2">
 					<Cloud class="h-6 w-6 text-red-500" />
 					<span class="text-lg font-bold">TYSONCLOUD</span>
-				</button>
+				</a>
 				<div class="flex items-center gap-4">
 					<button
 						class="flex items-center gap-2 rounded-md px-3 py-1 text-zinc-400 hover:bg-zinc-800 hover:text-white"
@@ -50,9 +49,7 @@
 		</div>
 	</header>
 
-	<!-- Main Content -->
 	<main class="container mx-auto px-4 py-8">
-		<!-- Dashboard Header -->
 		<div class="mb-8 flex items-center justify-between">
 			<div>
 				<h1 class="text-2xl font-bold">Dashboard</h1>
@@ -67,13 +64,11 @@
 			</button>
 		</div>
 
-		<!-- Deployments Section -->
 		<section>
 			<div class="mb-4">
 				<h2 class="text-xl font-semibold">Your Deployments</h2>
 			</div>
 
-			<!-- Deployment Cards -->
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 				{#each data.deployments as deployment (deployment.id)}
 					<div class="rounded-lg border border-zinc-800 bg-zinc-900 p-5">
@@ -137,7 +132,6 @@
 					</div>
 				{/each}
 
-				<!-- Add New Deployment Card -->
 				<button
 					class="flex h-full min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-zinc-800 bg-zinc-900 p-5 transition-colors hover:bg-zinc-800/50"
 					onclick={() => (createModalOpen = true)}
@@ -151,7 +145,6 @@
 			</div>
 		</section>
 
-		<!-- Quick Stats -->
 		<section class="mt-12">
 			<h2 class="mb-4 text-xl font-semibold">Quick Stats</h2>
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -175,7 +168,6 @@
 	</main>
 </div>
 
-<!-- Modals -->
 <DeploymentModals
 	{createModalOpen}
 	{updateModalOpen}
@@ -184,4 +176,5 @@
 	onCreateModalChange={(open) => (createModalOpen = open)}
 	onUpdateModalChange={(open) => (updateModalOpen = open)}
 	onDeleteModalChange={(open) => (deleteModalOpen = open)}
+	form
 />

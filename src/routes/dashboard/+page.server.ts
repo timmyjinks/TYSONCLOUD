@@ -27,6 +27,7 @@ export const actions = {
 		const url = formData.get('url') as string;
 		const env_array = JSON.parse(formData.get('env')) ?? [];
 		const volume = (formData.get('volume') as string) || '/data';
+		console.log(volume);
 
 		let env = {};
 		for (let i = 0; i < env_array.length; i++) {
@@ -66,6 +67,12 @@ export const actions = {
 		const new_name = formData.get('name') as string;
 		const update = formData.get('update') ? true : false;
 		const volume = formData.get('volume') as string;
+		const env_array = JSON.parse(formData.get('env')) ?? [];
+
+		let env = {};
+		for (let i = 0; i < env_array.length; i++) {
+			env[env_array[i].key] = env_array[i].value;
+		}
 
 		const options = { timeout: 8000 };
 		const timeout = 8000;
@@ -81,7 +88,8 @@ export const actions = {
 				id: id,
 				new_name: new_name,
 				update: update,
-				volume: volume
+				volume: volume,
+				env: env
 			})
 		});
 		clearTimeout(timer);
