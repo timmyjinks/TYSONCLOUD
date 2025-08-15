@@ -1,6 +1,10 @@
 <script>
-	import { Globe, GitBranch, Terminal, Settings, X, Plus } from '@lucide/svelte';
+	import { Globe, Settings, X, Plus } from '@lucide/svelte';
 	import Switch from '$lib/components/ui/switch/switch.svelte';
+	import { enhance } from '$app/forms';
+
+	let loading = $state(false);
+	let errorMessage = $state('');
 
 	let {
 		createModalOpen,
@@ -28,7 +32,6 @@
 		update: false
 	});
 
-	// Update form data when selectedDeployment changes
 	$effect(() => {
 		if (selectedDeployment) {
 			updateFormData = {
@@ -50,7 +53,25 @@
 		createFormData.url = '';
 		createFormData.envs = [];
 		createFormData.volume = '';
+		errorMessage = '';
 		selectedDeployment = null;
+	}
+
+	function submitForm() {
+		loading = true;
+		errorMessage = '';
+
+		return async ({ result, update }) => {
+			loading = false;
+
+			if (result.type === 'failure') {
+				errorMessage = result.data?.error || 'Something went wrong';
+				return;
+			}
+
+			await update();
+			close();
+		};
 	}
 </script>
 
@@ -70,14 +91,15 @@
 				</div>
 				<p class="mb-6 text-sm text-zinc-400">Deploy your project to NimbusCloud in seconds.</p>
 
-				<form action="?/create" method="POST" class="space-y-4">
+				<form action="?/create" method="POST" class="space-y-4" use:enhance={submitForm}>
 					<div class="space-y-2">
 						<label for="name" class="block text-sm font-medium"> Project Name </label>
 						<input
 							id="name"
 							name="name"
+							maxlength="24"
 							bind:value={createFormData.name}
-							placeholder="my-awesome-project"
+							placeholder="my website"
 							class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500"
 							required
 						/>
@@ -146,6 +168,10 @@
 						/>
 					</div>
 
+					{#if errorMessage != ''}
+						<p class="text-red-500">{errorMessage}</p>
+					{/if}
+
 					<div class="flex gap-2 pt-4">
 						<button
 							type="button"
@@ -155,10 +181,15 @@
 							Cancel
 						</button>
 						<button
+							disabled={loading}
 							type="submit"
 							class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
 						>
-							Deploy Project
+							{#if loading}
+								. . .
+							{:else}
+								Deploy Project
+							{/if}
 						</button>
 					</div>
 				</form>
@@ -173,7 +204,7 @@
 		<div class="w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 text-white">
 			<div class="p-6">
 				<div class="mb-5 flex items-center justify-between">
-					<form action="?/delete" method="POST">
+					<form action="?/delete" method="POST" use:enhance={submitForm}>
 						<p class="text-lg font-semibold">Are you sure?</p>
 						<input type="hidden" name="id" value={selectedDeployment.id} />
 						<div class="flex gap-2 pt-4">
@@ -185,11 +216,19 @@
 								Cancel
 							</button>
 							<button
+								disabled={loading}
 								type="submit"
 								class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
 							>
-								Delete Deployment
+								{#if loading}
+									. . .
+								{:else}
+									Delete Deployment
+								{/if}
 							</button>
+							{#if errorMessage != ''}
+								<p class="text-red-500">{errorMessage}</p>
+							{/if}
 						</div>
 					</form>
 				</div>
@@ -216,7 +255,7 @@
 					Update the configuration for "{selectedDeployment.name}".
 				</p>
 
-				<form action="?/update" method="POST" class="space-y-4">
+				<form action="?/update" method="POST" class="space-y-4" use:enhance={submitForm}>
 					<input type="hidden" name="id" value={selectedDeployment.id} />
 					<div class="space-y-2">
 						<label for="update-name" class="block text-sm font-medium"> Project Name </label>
@@ -228,7 +267,6 @@
 							required
 						/>
 					</div>
-					<p>{updateFormData.name}</p>
 
 					<div class="flex flex-col space-y-2">
 						<label class="block text-sm font-medium" for="envs"> Environment Variables </label>
@@ -284,6 +322,10 @@
 						<Switch name="update" checked={updateFormData.update} />
 					</div>
 
+					{#if errorMessage != ''}
+						<p class="text-red-500">{errorMessage}</p>
+					{/if}
+
 					<div class="flex gap-2 pt-4">
 						<button
 							type="button"
@@ -293,6 +335,7 @@
 							Cancel
 						</button>
 						<button
+							disabled={loading}
 							type="submit"
 							class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
 						>
