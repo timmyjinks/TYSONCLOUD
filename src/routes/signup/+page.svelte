@@ -4,7 +4,6 @@
 
 <div class="flex min-h-screen items-center justify-center bg-black px-4 text-white">
 	<div class="w-full max-w-md">
-		<!-- Logo -->
 		<div class="mb-8 text-center">
 			<div class="mb-4 flex items-center justify-center gap-2">
 				<Cloud class="h-8 w-8 text-red-500" />
@@ -103,7 +102,6 @@
 			</button>
 		</form>
 
-		<!-- Login link -->
 		<div class="mt-8 text-center">
 			<p class="text-zinc-400">
 				Already have an account?

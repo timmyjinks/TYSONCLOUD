@@ -4,7 +4,6 @@
 
 <div class="flex min-h-screen items-center justify-center bg-black px-4 text-white">
 	<div class="w-full max-w-md">
-		<!-- Logo -->
 		<div class="mb-8 text-center">
 			<div class="mb-4 flex items-center justify-center gap-2">
 				<Cloud class="h-8 w-8 text-red-500" />
@@ -14,7 +13,6 @@
 			<p class="text-zinc-400">Sign in to your account to continue</p>
 		</div>
 
-		<!-- Login Form -->
 		<form action="?/login" method="POST" class="space-y-6">
 			<div>
 				<label for="email" class="mb-2 block text-sm font-medium text-zinc-300">
@@ -72,7 +70,6 @@
 			</button>
 		</form>
 
-		<!-- Sign up link -->
 		<div class="mt-8 text-center">
 			<p class="text-zinc-400">
 				Don't have an account?
@@ -80,7 +77,6 @@
 			</p>
 		</div>
 
-		<!-- Back to home -->
 		<div class="mt-6 text-center">
 			<a href="/" class="text-sm text-zinc-500 hover:text-zinc-400"> ← Back to home </a>
 		</div>
