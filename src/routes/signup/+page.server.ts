@@ -13,6 +13,11 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const email = formData.get('email') as string;
 		const password = formData.get('password') as string;
+		const confirmPassword = formData.get('confirmPassword') as string;
+
+		if (password != confirmPassword) {
+			return fail(343, { error: 'Passwords do not match' });
+		}
 
 		const { error } = await supabase.auth.signUp({ email, password });
 
