@@ -106,12 +106,12 @@
 					</div>
 
 					<div class="space-y-2">
-						<label for="url" class="block text-sm font-medium"> URL </label>
+						<label for="url" class="block text-sm font-medium"> URL or Docker Image </label>
 						<input
 							id="url"
 							name="url"
 							bind:value={createFormData.url}
-							placeholder="https://my-project.com"
+							placeholder="https://github.com/timmyjinks/TYSONCLOUD or image:latest"
 							class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500"
 							required
 						/>
@@ -339,7 +339,11 @@
 							type="submit"
 							class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
 						>
-							Update Deployment
+							{#if loading}
+								. . .
+							{:else}
+								Update Deployment
+							{/if}
 						</button>
 					</div>
 				</form>

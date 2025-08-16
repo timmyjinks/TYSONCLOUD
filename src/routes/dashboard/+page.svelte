@@ -176,5 +176,4 @@
 	onCreateModalChange={(open) => (createModalOpen = open)}
 	onUpdateModalChange={(open) => (updateModalOpen = open)}
 	onDeleteModalChange={(open) => (deleteModalOpen = open)}
-	form
 />

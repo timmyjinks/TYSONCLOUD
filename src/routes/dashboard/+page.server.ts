@@ -123,7 +123,6 @@ export const actions = {
 	logout: async ({ locals }) => {
 		const { error } = await locals.supabase.auth.signOut();
 
-		console.log(locals.supabase.user);
 		if (error) {
 			console.log(error?.message);
 		}
