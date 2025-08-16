@@ -1,425 +1,111 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import Switch from '$lib/components/ui/switch/switch.svelte';
-
-	let showCreateModal = false;
-	let showEditModal = false;
-	let showDeleteModal = false;
-	let selectedDeployment = null;
-	let env: [] = [];
-	let loading = false;
-	let loggingOut = false;
-	let update = false;
-	export let data;
-	export let form;
-
-	function openCreateModal() {
-		showCreateModal = true;
-	}
-
-	function openEditModal(deployment) {
-		console.log(deployment);
-		selectedDeployment = deployment;
-		showEditModal = true;
-	}
-
-	function openDeleteModal(deployment) {
-		selectedDeployment = deployment;
-		showDeleteModal = true;
-	}
-
-	function closeModals() {
-		showCreateModal = false;
-		showEditModal = false;
-		showDeleteModal = false;
-		selectedDeployment = null;
-		loading = false;
-		env = [];
-	}
-
-	function deleteEnv() {
-		env.pop();
-		env = [...env];
-	}
-
-	// Utility functions
-	function getStatusColor(status) {
-		return status === 'running' ? 'bg-green-500' : 'bg-gray-400';
-	}
-
-	function getHealthColor(health) {
-		switch (health) {
-			case 'healthy':
-				return 'text-green-400';
-			case 'warning':
-				return 'text-yellow-400';
-			case 'error':
-				return 'text-red-400';
-			default:
-				return 'text-gray-400';
-		}
-	}
-
-	function formatDate(dateString) {
-		return new Date(dateString).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-	}
-
-	$: if (form?.error) {
-		loading = false;
-		loggingOut = false;
-	}
+	import { ArrowRight, Cloud, Upload, GitBranch, Container, Zap } from '@lucide/svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-	<div class="mx-auto mb-8 max-w-7xl">
-		<div class="flex items-center justify-between">
-			<div>
-				<h1 class="mb-2 text-4xl font-light tracking-tight text-white">Deployments</h1>
-				<p class="text-lg text-white/60">Manage your application deployments</p>
+<div class="min-h-screen bg-black text-white">
+	<header class="container mx-auto px-4 py-6">
+		<nav class="flex items-center justify-between">
+			<div class="flex items-center gap-2">
+				<Cloud class="h-8 w-8 text-red-500" />
+				<span class="text-xl font-bold tracking-tight">TYSONCLOUD</span>
 			</div>
+			<div class="flex items-center gap-4">
+				<a href="/login" class="text-sm text-zinc-400 transition-colors hover:text-white">
+					Sign in
+				</a>
+				<a href="/signup"
+					><Button class="bg-red-600 text-white hover:bg-red-700">Get Started</Button></a
+				>
+			</div>
+		</nav>
+	</header>
 
-			<div class="flex">
-				<button
-					on:click={openCreateModal}
-					class="mr-[32px] flex items-center space-x-2 rounded-2xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-xl transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-2xl"
+	<section class="container mx-auto px-4 py-24 md:py-32">
+		<div class="mx-auto max-w-3xl text-center">
+			<h1 class="mb-6 text-4xl font-bold tracking-tight md:text-6xl">
+				Cloud infrastructure for the{' '}
+				<span class="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+					modern developer
+				</span>
+			</h1>
+			<p class="mx-auto mb-10 max-w-2xl text-xl text-zinc-400">
+				Deploy, scale, and manage your applications with unparalleled speed and reliability. Built
+				for developers who demand more.
+			</p>
+			<div class="flex flex-col justify-center gap-4 sm:flex-row">
+				<Button
+					size="lg"
+					variant="outline"
+					class="border-zinc-700 bg-transparent text-white hover:bg-zinc-900"
 				>
-					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M12 4v16m8-8H4"
-						/>
-					</svg>
-					<span>New Deployment</span>
-				</button>
-				<form
-					action="?/logout"
-					use:enhance={() => {
-						loggingOut = true;
-					}}
-					method="post"
-				>
-					<button
-						class="flex items-center space-x-2 rounded-2xl bg-red-600 px-6 py-3 font-semibold text-white shadow-xl transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-700 hover:shadow-2xl disabled:bg-red-400"
-						type="submit"
-					>
-						<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-							/>
-						</svg>
-						<span>{loggingOut ? 'Logging out...' : 'Logout'}</span>
-					</button>
-				</form>
+					View documentation (Coming soon...) <ArrowRight class="ml-2 h-4 w-4" />
+				</Button>
 			</div>
 		</div>
-	</div>
-
-	<!-- Deployments Grid -->
-	<div class="mx-auto max-w-7xl">
-		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-			{#each data.deployments as deployment}
-				<div
-					class="rounded-3xl border border-white/20 bg-white/10 p-6 shadow-2xl backdrop-blur-2xl transition-all duration-200 hover:bg-white/15"
-				>
-					<!-- Header -->
-					<div class="mb-4 flex items-start justify-between">
-						<div class="flex items-center space-x-3">
-							<div class="h-3 w-3 rounded-full {getStatusColor(deployment.status)}"></div>
-							<h3 class="text-xl font-semibold text-white">{deployment.name}</h3>
-						</div>
-
-						<div class="flex items-center space-x-2">
-							<button
-								on:click={() => openEditModal(deployment)}
-								class="rounded-xl p-2 text-white/60 transition-all duration-200 hover:bg-white/10 hover:text-white"
-							>
-								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-									/>
-								</svg>
-							</button>
-
-							<button
-								on:click={() => openDeleteModal(deployment)}
-								class="rounded-xl p-2 text-white/60 transition-all duration-200 hover:bg-red-500/10 hover:text-red-400"
-							>
-								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-									/>
-								</svg>
-							</button>
-						</div>
-					</div>
-
-					<!-- Description -->
-					<p class="mb-4 line-clamp-2 text-sm text-white/70">{deployment.description}</p>
-
-					<!-- URL -->
-					{#if deployment.url}
-						<div class="mt-4 border-t border-white/20 pt-4">
-							<a
-								href={'https://' + deployment.url}
-								target="_blank"
-								class="flex items-center space-x-1 text-sm font-medium text-blue-400 transition-colors duration-200 hover:text-blue-300"
-							>
-								<span>Visit Site</span>
-								<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-									/>
-								</svg>
-							</a>
-						</div>
-					{/if}
-				</div>
-			{/each}
+	</section>
+	<section class="container mx-auto px-4 py-24">
+		<div class="mx-auto mb-16 max-w-4xl text-center">
+			<h2 class="mb-6 text-3xl font-bold md:text-4xl">
+				Deployment made{' '}
+				<span class="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+					effortless
+				</span>
+			</h2>
+			<p class="mx-auto max-w-2xl text-xl text-zinc-400">
+				Just paste a link and watch your application come to life. No complex configurations, no
+				lengthy setup processes.
+			</p>
 		</div>
-	</div>
-</div>
 
-<!-- Create Modal -->
-{#if showCreateModal}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-		<div
-			class="w-full max-w-lg rounded-3xl border border-white/30 bg-white/20 p-8 shadow-2xl backdrop-blur-2xl"
-		>
-			<h2 class="mb-6 text-2xl font-semibold text-white">Create New Deployment</h2>
-
-			<form
-				action="?/create"
-				use:enhance={() => {
-					loading = true;
-					return async ({ update }) => {
-						await update();
-						closeModals();
-					};
-				}}
-				method="post"
-				class="space-y-4"
+		<div class="mx-auto grid max-w-5xl gap-8 md:grid-cols-2">
+			<div
+				class="rounded-lg border border-zinc-800 bg-zinc-900 p-8 transition-colors hover:border-red-500/50"
 			>
-				<div>
-					<input
-						type="text"
-						name="name"
-						placeholder="Deployment Name"
-						class="w-full rounded-2xl border border-white/30 bg-white/90 px-4 py-3 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-						required
-					/>
+				<div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-lg bg-red-900">
+					<GitBranch class="h-8 w-8 text-red-400" />
 				</div>
-				<div>
-					<input
-						type="text"
-						name="image"
-						placeholder="Docker image or Github repository"
-						class="w-full rounded-2xl border border-white/30 bg-white/90 px-4 py-3 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-						required
-					/>
-				</div>
-				<div>
-					<textarea
-						placeholder="Description"
-						rows="3"
-						class="w-full resize-none rounded-2xl border border-white/30 bg-white/90 px-4 py-3 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-					></textarea>
-				</div>
-
-				<h1 class="mb-6 text-2xl font-semibold text-white">Env</h1>
-				{#each env as e}
-					<div>
-						<input
-							class="w-[42%] resize-none rounded-2xl border border-white/30 bg-white/90 px-4 py-3 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-							type="text"
-							bind:value={e.key}
-							placeholder={e.key}
-						/>
-						<input
-							class="w-[42%] resize-none rounded-2xl border border-white/30 bg-white/90 px-4 py-3 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-							type="text"
-							bind:value={e.val}
-							placeholder={e.val}
-						/>
-					</div>
-				{/each}
-				<input type="hidden" name="env" value={JSON.stringify(env)} />
-				<button
-					type="button"
-					class="rounded-2xl border border-white/30 bg-white/20 px-8 py-4 font-semibold text-white backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/40 hover:bg-white/30 hover:shadow-2xl hover:backdrop-blur-lg"
-					on:click={() => {
-						env = [...env, { key: '', val: '' }];
-						console.log(env);
-					}}>+</button
-				>
-				<button
-					type="button"
-					class="rounded-2xl border border-white/30 bg-white/20 px-8 py-4 font-semibold text-white backdrop-blur-md transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/40 hover:bg-white/30 hover:shadow-2xl hover:backdrop-blur-lg"
-					on:click={deleteEnv}>-</button
-				>
-
-				<div class="flex space-x-3 pt-4">
-					<button
-						type="button"
-						on:click={closeModals}
-						class="flex-1 rounded-2xl border border-white/30 bg-white/20 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-white/30"
-					>
-						Cancel
-					</button>
-
-					<button
-						type="submit"
-						disabled={loading}
-						class="flex-1 rounded-2xl bg-blue-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-blue-700 disabled:opacity-50"
-					>
-						{loading ? 'Create...' : 'Create'}
-					</button>
-				</div>
-			</form>
-		</div>
-	</div>
-{/if}
-
-<!-- Edit Modal -->
-{#if showEditModal}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-		<div
-			class="w-full max-w-lg rounded-3xl border border-white/30 bg-white/20 p-8 shadow-2xl backdrop-blur-2xl"
-		>
-			<h2 class="mb-6 text-2xl font-semibold text-white">Edit Deployment</h2>
-
-			<form
-				action="?/update"
-				use:enhance={() => {
-					loading = true;
-					return async ({ update }) => {
-						await update();
-						closeModals();
-					};
-				}}
-				method="post"
-				class="space-y-4"
-			>
-				<div>
-					<input
-						type="text"
-						name="name"
-						value={selectedDeployment?.name}
-						placeholder="Deployment Name"
-						class="w-full rounded-2xl border border-white/30 bg-white/90 px-4 py-3 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-					/>
-				</div>
-				<div>
-					<textarea
-						placeholder="Description"
-						rows="3"
-						class="w-full resize-none rounded-2xl border border-white/30 bg-white/90 px-4 py-3 font-medium text-gray-800 placeholder-gray-500 backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-					></textarea>
-				</div>
-				<div>
-					<label class="text-white" for="update-image">Update</label>
-					<Switch bind:checked={update} id="update" class="m-[15px]" />
-					<input type="hidden" name="update" value={update ? 'true' : 'false'} hidden />
-				</div>
-
-				<div class="flex space-x-3 pt-4">
-					<button
-						type="button"
-						on:click={closeModals}
-						class="flex-1 rounded-2xl border border-white/30 bg-white/20 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-white/30"
-					>
-						Cancel
-					</button>
-
-					<input type="hidden" name="id" value={selectedDeployment?.id} />
-					<button
-						type="submit"
-						disabled={loading}
-						class="flex-1 rounded-2xl bg-blue-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-blue-700 disabled:opacity-50"
-					>
-						{loading ? 'Updating...' : 'Update'}
-					</button>
-				</div>
-			</form>
-		</div>
-	</div>
-{/if}
-
-<!-- Delete Modal -->
-{#if showDeleteModal}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-		<div
-			class="w-full max-w-md rounded-3xl border border-white/30 bg-white/20 p-8 shadow-2xl backdrop-blur-2xl"
-		>
-			<div class="text-center">
-				<div
-					class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/20"
-				>
-					<svg class="h-8 w-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-						/>
-					</svg>
-				</div>
-
-				<h2 class="mb-2 text-2xl font-semibold text-white">Delete Deployment</h2>
-				<p class="mb-6 text-white/70">
-					Are you sure you want to delete "{selectedDeployment?.name}"? This action cannot be
-					undone.
+				<h3 class="mb-4 text-center text-2xl font-bold">Git Repository</h3>
+				<p class="mb-6 text-center text-zinc-400">
+					Paste your GitHub, GitLab, or Bitbucket repository URL and we'll handle the rest.
 				</p>
+				<div class="rounded-md border border-zinc-700 bg-zinc-950 p-4 font-mono text-sm">
+					<div class="mb-2 text-zinc-500">Repository URL:</div>
+					<div class="text-green-400">https://github.com/user/my-app.git</div>
+					<div class="mt-3 mb-1 text-zinc-500">✓ Automatic build detection</div>
+					<div class="mb-1 text-zinc-500">✓ Environment configuration</div>
+					<div class="text-zinc-500">✓ Live deployment in seconds</div>
+				</div>
+			</div>
 
-				<form
-					action="?/delete"
-					use:enhance={() => {
-						loading = true;
-
-						return async ({ update }) => {
-							await update();
-							closeModals();
-						};
-					}}
-					method="post"
-				>
-					<div class="flex space-x-3">
-						<button
-							type="button"
-							on:click={closeModals}
-							class="flex-1 rounded-2xl border border-white/30 bg-white/20 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-white/30"
-						>
-							Cancel
-						</button>
-						<input type="hidden" name="id" value={selectedDeployment?.id} />
-						<button
-							type="submit"
-							disabled={loading}
-							class="flex-1 rounded-2xl bg-red-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-red-700 disabled:opacity-50"
-						>
-							{loading ? 'Deleting...' : 'Delete'}
-						</button>
-					</div>
-				</form>
+			<div
+				class="rounded-lg border border-zinc-800 bg-zinc-900 p-8 transition-colors hover:border-red-500/50"
+			>
+				<div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-lg bg-red-900">
+					<Container class="h-8 w-8 text-red-400" />
+				</div>
+				<h3 class="mb-4 text-center text-2xl font-bold">Docker Image</h3>
+				<p class="mb-6 text-center text-zinc-400">
+					Deploy any Docker image from Docker Hub, private registries, or custom builds.
+				</p>
+				<div class="rounded-md border border-zinc-700 bg-zinc-950 p-4 font-mono text-sm">
+					<div class="mb-2 text-zinc-500">Docker Image:</div>
+					<div class="text-blue-400">nginx:latest</div>
+					<div class="mt-3 mb-1 text-zinc-500">✓ Automatic container orchestration</div>
+				</div>
 			</div>
 		</div>
-	</div>
-{/if}
+	</section>
+
+	<footer class="container mx-auto border-zinc-800 px-4 py-12">
+		<div
+			class="mt-12 flex flex-col items-center justify-between border-t border-zinc-800 pt-8 md:flex-row"
+		>
+			<div class="mb-4 flex items-center gap-2 md:mb-0">
+				<Cloud class="h-6 w-6 text-red-500" />
+				<span class="text-lg font-bold">TYSONCLOUD</span>
+			</div>
+			<p class="text-sm text-zinc-500">© 2025 TYSONCLOUD, Inc. All rights reserved.</p>
+		</div>
+	</footer>
+</div>
