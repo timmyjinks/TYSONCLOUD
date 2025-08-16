@@ -6,7 +6,7 @@ export const GET = async (event) => {
 		locals: { supabase }
 	} = event;
 	const code = url.searchParams.get('code') as string;
-	const next = url.searchParams.get('next') ?? '/auth';
+	const next = url.searchParams.get('next') ?? '/dashboard';
 
 	if (code) {
 		const { error } = await supabase.auth.exchangeCodeForSession(code);
