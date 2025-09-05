@@ -89,7 +89,7 @@
 						<X class="h-5 w-5" />
 					</button>
 				</div>
-				<p class="mb-6 text-sm text-zinc-400">Deploy your project to NimbusCloud in seconds.</p>
+				<p class="mb-6 text-sm text-zinc-400">Deploy your project to TYSONCLOUD in seconds.</p>
 
 				<form action="?/create" method="POST" class="space-y-4" use:enhance={submitForm}>
 					<div class="space-y-2">
