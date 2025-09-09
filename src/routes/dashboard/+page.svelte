@@ -1,14 +1,17 @@
-<script>
+<script lang="ts">
 	import { ArrowUpRight, Cloud, LogOut, Plus, Settings, Trash2 } from '@lucide/svelte';
 	import DeploymentModals from '$lib/components/DeploymentModals.svelte';
+	import LogsModal from '$lib/components/LogsModal.svelte';
 
 	let { data } = $props();
 
 	let createModalOpen = $state(false);
 	let updateModalOpen = $state(false);
 	let deleteModalOpen = $state(false);
+	let logsModalOpen = $state(false);
 	let selectedDeployment = $state(null);
 	let totalDeployments = $state(data.deployments.length);
+	let logs = $state([]);
 
 	function handleUpdateClick(deployment) {
 		selectedDeployment = deployment;
@@ -18,6 +21,16 @@
 	function handleDeleteClick(deployment) {
 		selectedDeployment = deployment;
 		deleteModalOpen = true;
+	}
+
+	async function handleViewLogs(deployment) {
+		selectedDeployment = deployment;
+
+		const res = await fetch('/api/logs?container_id=' + deployment.id, {});
+
+		const data = await res.json();
+		logs = data.logs || [];
+		logsModalOpen = true;
 	}
 </script>
 
@@ -117,10 +130,12 @@
 						</div>
 
 						<div class="mt-4 flex justify-between border-t border-zinc-800 pt-4">
+							<input type="hidden" name="container_id" value={deployment.id} />
 							<button
+								onclick={() => handleViewLogs(deployment)}
 								class="rounded-md border border-zinc-700 bg-transparent px-3 py-1 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-white"
 							>
-								Logs (Coming soon...)
+								View Logs
 							</button>
 							<button
 								class="rounded-md bg-red-600 px-3 py-1 text-sm hover:bg-red-700"
@@ -176,4 +191,11 @@
 	onCreateModalChange={(open) => (createModalOpen = open)}
 	onUpdateModalChange={(open) => (updateModalOpen = open)}
 	onDeleteModalChange={(open) => (deleteModalOpen = open)}
+/>
+
+<LogsModal
+	isOpen={logsModalOpen}
+	onClose={() => (logsModalOpen = false)}
+	deployment={selectedDeployment}
+	{logs}
 />
