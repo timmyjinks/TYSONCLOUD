@@ -3,6 +3,6 @@ run-name: ${{ github.actor }} is learning GitHub Actions
 on: [push]
 jobs:
   echo-hello-world:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - run: echo "hello world"
