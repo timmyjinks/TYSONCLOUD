@@ -55,7 +55,6 @@ export const actions = {
 			body: JSON.stringify({
 				name: name,
 				source: source,
-				username: locals.user.email,
 				env: env,
 				volume: volume
 			})
