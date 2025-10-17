@@ -8,7 +8,8 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from '$env/static/private';
 const allowedOrigins = [
 	'https://status.tysonjenkins.dev',
 	'https://tysoncloud.tysonjenkins.dev',
-	'https://tysoncloud-test.tysonjenkins.dev'
+	'https://tysoncloud-test.tysonjenkins.dev',
+	'http://localhost:3000'
 ];
 const allowedPaths = ['login', 'signup', 'create', 'update', 'delete', 'logout'];
 

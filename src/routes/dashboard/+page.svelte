@@ -126,7 +126,9 @@
 
 						<div class="flex justify-between text-xs text-zinc-500">
 							<p>Last deployed</p>
-							<p>{new Date(deployment.last_deployed).toDateString()}</p>
+							<p>
+								{new Date(deployment.created_at).toDateString()}
+							</p>
 						</div>
 
 						<div class="mt-4 flex justify-between border-t border-zinc-800 pt-4">
