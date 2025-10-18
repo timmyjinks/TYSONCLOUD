@@ -29,9 +29,10 @@ export const actions = {
 	create: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const name = formData.get('name') as string;
-		const source = formData.get('url') as string;
+		const source = formData.get('source') as string;
 		const env_array = JSON.parse(formData.get('env')) ?? [];
 		const volume = (formData.get('volume') as string) || '/data';
+		const type = (formData.get('type') as string) || '';
 		const session = await locals.supabase.auth.getSession();
 
 		let env = {};
@@ -56,7 +57,8 @@ export const actions = {
 				name: name,
 				source: source,
 				env: env,
-				volume: volume
+				volume: volume,
+				type: type
 			})
 		});
 		clearTimeout(timer);
@@ -75,6 +77,7 @@ export const actions = {
 		const update = formData.get('update') ? true : false;
 		const volume = (formData.get('volume') as string) ?? '/data';
 		const env_array = JSON.parse(formData.get('env')) ?? [];
+		const type = (formData.get('type') as string) ?? '';
 		const session = await locals.supabase.auth.getSession();
 
 		let env = {};
@@ -100,7 +103,8 @@ export const actions = {
 				new_name: new_name,
 				update: update,
 				volume: volume,
-				env: env
+				env: env,
+				type: type
 			})
 		});
 		clearTimeout(timer);
