@@ -32,6 +32,16 @@
 		logs = data.logs || [];
 		logsModalOpen = true;
 	}
+
+	let creating = [];
+	let running = [];
+	for (let d of data.deployments) {
+		if (d.status === 'running') {
+			running.push(d);
+		} else {
+			creating.push(d);
+		}
+	}
 </script>
 
 <div class="min-h-screen bg-black text-white">
@@ -78,12 +88,92 @@
 		</div>
 
 		<section>
+			{#if creating.length > 0}
+				<div class="mb-4">
+					<h2 class="text-xl font-semibold">Creating or Failed</h2>
+				</div>
+
+				<div class="mb-[20px] grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+					{#each creating as deployment (deployment.id)}
+						<div class="rounded-lg border border-zinc-800 bg-zinc-900 p-5">
+							<div class="mb-4 flex items-start justify-between">
+								<div>
+									<h3 class="text-lg font-semibold">{deployment.name}</h3>
+									<div class="mt-1 flex items-center">
+										{#if deployment.status == 'generating' || deployment.status == 'pulling' || deployment.status == 'cloning'}
+											<span class="mr-2 inline-block h-2 w-2 rounded-full bg-yellow-500"></span>
+										{:else if deployment.status == 'created'}
+											<span class="mr-2 inline-block h-2 w-2 rounded-full bg-purple-500"></span>
+										{:else if deployment.status == 'building'}
+											<span class="mr-2 inline-block h-2 w-2 rounded-full bg-yellow-500"></span>
+										{:else if deployment.status == 'deploying'}
+											<span class="mr-2 inline-block h-2 w-2 rounded-full bg-orange-500"></span>
+										{:else if deployment.status == 'failed'}
+											<span class="mr-2 inline-block h-2 w-2 rounded-full bg-red-500"></span>
+										{/if}
+										<span class="text-sm text-zinc-400 capitalize">{deployment.status}</span>
+									</div>
+								</div>
+								<div class="flex gap-1">
+									<button
+										class="flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-800 hover:text-white"
+										onclick={() => handleUpdateClick(deployment)}
+									>
+										<Settings class="h-4 w-4" />
+									</button>
+									<button
+										class="flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-800 hover:text-red-500"
+										onclick={() => handleDeleteClick(deployment)}
+									>
+										<Trash2 class="h-4 w-4" />
+									</button>
+								</div>
+							</div>
+
+							<div class="mb-4 flex items-center">
+								<a
+									href="https://{deployment.url}"
+									target="_blank"
+									class="flex items-center text-sm text-zinc-400 hover:text-red-400"
+								>
+									{deployment.url}
+									<ArrowUpRight class="ml-1 h-3 w-3" />
+								</a>
+							</div>
+
+							<div class="flex justify-between text-xs text-zinc-500">
+								<p>Last deployed</p>
+								<p>
+									{new Date(deployment.created_at).toDateString()}
+								</p>
+							</div>
+
+							<div class="mt-4 flex justify-between border-t border-zinc-800 pt-4">
+								<input type="hidden" name="id" value={deployment.id} />
+								<input type="hidden" name="container_id" value={deployment.container_id} />
+								<button
+									onclick={() => handleViewLogs(deployment)}
+									class="rounded-md border border-zinc-700 bg-transparent px-3 py-1 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-white"
+								>
+									View Logs
+								</button>
+								<button
+									class="rounded-md bg-red-600 px-3 py-1 text-sm hover:bg-red-700"
+									onclick={() => handleUpdateClick(deployment)}
+								>
+									Update
+								</button>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
 			<div class="mb-4">
 				<h2 class="text-xl font-semibold">Your Deployments</h2>
 			</div>
 
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-				{#each data.deployments as deployment (deployment.id)}
+				{#each running as deployment (deployment.id)}
 					<div class="rounded-lg border border-zinc-800 bg-zinc-900 p-5">
 						<div class="mb-4 flex items-start justify-between">
 							<div>
@@ -91,16 +181,6 @@
 								<div class="mt-1 flex items-center">
 									{#if deployment.status == 'running'}
 										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-green-500"></span>
-									{:else if deployment.status == 'generating' || deployment.status == 'pulling' || deployment.status == 'cloning'}
-										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-yellow-500"></span>
-									{:else if deployment.status == 'created'}
-										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-purple-500"></span>
-									{:else if deployment.status == 'building'}
-										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-yellow-500"></span>
-									{:else if deployment.status == 'deploying'}
-										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-orange-500"></span>
-									{:else if deployment.status == 'failed'}
-										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-red-500"></span>
 									{/if}
 									<span class="text-sm text-zinc-400 capitalize">{deployment.status}</span>
 								</div>
