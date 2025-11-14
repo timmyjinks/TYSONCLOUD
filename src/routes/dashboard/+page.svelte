@@ -91,7 +91,15 @@
 								<div class="mt-1 flex items-center">
 									{#if deployment.status == 'running'}
 										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-green-500"></span>
-									{:else}
+									{:else if deployment.status == 'generating' || deployment.status == 'pulling' || deployment.status == 'cloning'}
+										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-yellow-500"></span>
+									{:else if deployment.status == 'created'}
+										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-purple-500"></span>
+									{:else if deployment.status == 'building'}
+										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-yellow-500"></span>
+									{:else if deployment.status == 'deploying'}
+										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-orange-500"></span>
+									{:else if deployment.status == 'failed'}
 										<span class="mr-2 inline-block h-2 w-2 rounded-full bg-red-500"></span>
 									{/if}
 									<span class="text-sm text-zinc-400 capitalize">{deployment.status}</span>
