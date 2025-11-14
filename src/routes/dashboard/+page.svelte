@@ -132,7 +132,8 @@
 						</div>
 
 						<div class="mt-4 flex justify-between border-t border-zinc-800 pt-4">
-							<input type="hidden" name="container_id" value={deployment.id} />
+							<input type="hidden" name="id" value={deployment.id} />
+							<input type="hidden" name="container_id" value={deployment.container_id} />
 							<button
 								onclick={() => handleViewLogs(deployment)}
 								class="rounded-md border border-zinc-700 bg-transparent px-3 py-1 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-white"

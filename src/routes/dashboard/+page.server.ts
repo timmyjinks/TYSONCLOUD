@@ -27,18 +27,27 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions = {
 	create: async ({ request, locals }) => {
-		const formData = await request.formData();
-		const name = formData.get('name') as string;
-		const source = formData.get('source') as string;
+		const formData: FormData = await request.formData();
 		const env_array = JSON.parse(formData.get('env')) ?? [];
-		const volume = (formData.get('volume') as string) || '/data';
-		const type = (formData.get('type') as string) || '';
+		let volume = (formData.get('volume') as string) || '/data';
 		const session = await locals.supabase.auth.getSession();
 
 		let env = {};
 		for (let i = 0; i < env_array.length; i++) {
 			env[env_array[i].key] = env_array[i].value;
 		}
+
+		const files = formData.get('files') as File;
+		if (files == null) {
+			formData.set('files', new File([], 'none', undefined));
+		} else if (files.name == '') {
+			formData.set('files', new File([], 'none', undefined));
+		}
+
+		formData.set('env', JSON.stringify(env));
+		formData.set('volume', volume);
+
+		console.log(formData);
 
 		const options = { timeout: 8000 };
 		const timeout = 8000;
@@ -50,16 +59,9 @@ export const actions = {
 			signal: controller.signal,
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json',
 				Authorization: 'Bearer ' + session.data.session?.access_token
 			},
-			body: JSON.stringify({
-				name: name,
-				source: source,
-				env: env,
-				volume: volume,
-				type: type
-			})
+			body: formData
 		});
 		clearTimeout(timer);
 
@@ -73,6 +75,7 @@ export const actions = {
 	update: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const id = formData.get('id') as string;
+		const container_id = formData.get('container_id') as string;
 		const new_name = formData.get('name') as string;
 		const update = formData.get('update') ? true : false;
 		const volume = (formData.get('volume') as string) ?? '/data';
@@ -100,6 +103,7 @@ export const actions = {
 			},
 			body: JSON.stringify({
 				id: id,
+				container_id: container_id,
 				new_name: new_name,
 				update: update,
 				volume: volume,
@@ -119,7 +123,11 @@ export const actions = {
 	delete: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const id = formData.get('id');
+		const container_id = formData.get('container_id');
 		const session = await locals.supabase.auth.getSession();
+
+		console.log(id);
+		console.log(container_id);
 
 		const response = await fetch(`${BACKEND_URL}/delete`, {
 			method: 'DELETE',
@@ -128,7 +136,8 @@ export const actions = {
 				Authorization: 'Bearer ' + session.data.session?.access_token
 			},
 			body: JSON.stringify({
-				id: id
+				id: id,
+				container_id: container_id
 			})
 		});
 

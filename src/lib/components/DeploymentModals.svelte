@@ -105,7 +105,7 @@
 						<X class="h-5 w-5" />
 					</button>
 				</div>
-				<p class="mb-6 text-sm text-zinc-400">Deploy your project to NimbusCloud in seconds.</p>
+				<p class="mb-6 text-sm text-zinc-400">Deploy your project to TYSONCLOUD in seconds.</p>
 
 				<!-- Added tab navigation for deployment methods -->
 				<div class="mb-6 flex gap-2 border-b border-zinc-800">
@@ -135,19 +135,25 @@
 					</button>
 					<button
 						type="button"
-						onclick={() => (createActiveTab = 'prompt')}
+						onclick={() => (createActiveTab = 'slop')}
 						class={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-							createActiveTab === 'prompt'
+							createActiveTab === 'slop'
 								? 'border-red-500 text-red-500'
 								: 'border-transparent text-zinc-400 hover:text-white'
 						}`}
 					>
 						<Sparkles class="h-4 w-4" />
-						Prompt
+						Prompt (BETA)
 					</button>
 				</div>
 
-				<form action="?/create" method="POST" class="space-y-4" use:enhance={submitForm}>
+				<form
+					action="?/create"
+					method="POST"
+					enctype="multipart/form-data"
+					class="space-y-4"
+					use:enhance={submitForm}
+				>
 					<div class="space-y-2">
 						<label for="name" class="block text-sm font-medium"> Project Name </label>
 						<input
@@ -163,7 +169,7 @@
 
 					<!-- Docker tab content -->
 					{#if createActiveTab === 'docker'}
-						<input type="hidden" name="type" value="docker" />
+						<input type="hidden" name="deployment_type" value="docker" />
 						<div class="space-y-2">
 							<label for="docker-image" class="block text-sm font-medium"> Docker Image </label>
 							<input
@@ -179,7 +185,7 @@
 
 					<!-- Git tab content -->
 					{#if createActiveTab === 'git'}
-						<input type="hidden" name="type" value="git" />
+						<input type="hidden" name="deployment_type" value="git" />
 						<div class="space-y-2">
 							<label for="git-url" class="block text-sm font-medium"> Repository URL </label>
 							<input
@@ -194,8 +200,8 @@
 					{/if}
 
 					<!-- Prompt tab content -->
-					{#if createActiveTab === 'prompt'}
-						<input type="hidden" name="type" value="slop" />
+					{#if createActiveTab === 'slop'}
+						<input type="hidden" name="deployment_type" value="slop" />
 						<div class="space-y-2">
 							<label for="prompt" class="block text-sm font-medium">
 								Describe Your Deployment
@@ -208,13 +214,19 @@
 								class="min-h-[120px] w-full resize-none rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500"
 								required
 							></textarea>
+							<input
+								name="files"
+								type="file"
+								multiple
+								class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500"
+							/>
 							<p class="text-xs text-zinc-500">
 								Describe what you want to deploy and we'll configure it for you.
 							</p>
 						</div>
 					{/if}
 
-					{#if createActiveTab !== 'prompt'}
+					{#if createActiveTab !== 'slop'}
 						<div class="space-y-2">
 							<label class="block text-sm font-medium" for="envs"> Environment Variables </label>
 							<div class="space-y-2">
@@ -241,8 +253,8 @@
 											<X class="h-4 w-4" />
 										</button>
 									</div>
-									<input type="hidden" name="env" value={JSON.stringify(createFormData.envs)} />
 								{/each}
+								<input type="hidden" name="env" value={JSON.stringify(createFormData.envs)} />
 								<button
 									type="button"
 									onclick={() =>
@@ -319,6 +331,7 @@
 
 				<form action="?/update" method="POST" class="space-y-4" use:enhance={submitForm}>
 					<input type="hidden" name="id" value={selectedDeployment.id} />
+					<input type="hidden" name="container_id" value={selectedDeployment.container_id} />
 					<div class="space-y-2">
 						<label for="update-name" class="block text-sm font-medium"> Project Name </label>
 						<input
@@ -466,6 +479,7 @@
 				</p>
 				<form action="?/delete" method="POST" use:enhance={submitForm}>
 					<input type="hidden" name="id" value={selectedDeployment.id} />
+					<input type="hidden" name="container_id" value={selectedDeployment.container_id} />
 					<div class="flex gap-2">
 						<button
 							type="button"
