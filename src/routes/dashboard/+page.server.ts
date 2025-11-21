@@ -2,7 +2,8 @@ import { redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { BACKEND_URL } from '$env/static/private';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, depends }) => {
+	depends('deployments');
 	const user = await locals.supabase.auth.getUser();
 	const session = await locals.supabase.auth.getSession();
 	if (!user.data.user) {
@@ -49,28 +50,15 @@ export const actions = {
 
 		console.log(formData);
 
-		const options = { timeout: 8000 };
-		const timeout = 8000;
-		const controller = new AbortController();
-		const timer = setTimeout(() => controller.abort, timeout);
-
-		const response = await fetch(`${BACKEND_URL}/create`, {
-			...options,
-			signal: controller.signal,
+		fetch(`${BACKEND_URL}/create`, {
 			method: 'POST',
 			headers: {
 				Authorization: 'Bearer ' + session.data.session?.access_token
 			},
 			body: formData
 		});
-		clearTimeout(timer);
 
-		if (response.status !== 200) {
-			return fail(400, {
-				error: 'Error creating container'
-			});
-		}
-		redirect(302, '/dashboard');
+		return { success: true };
 	},
 	update: async ({ request, locals }) => {
 		const formData = await request.formData();
@@ -93,7 +81,7 @@ export const actions = {
 		const controller = new AbortController();
 		const timer = setTimeout(() => controller.abort, timeout);
 
-		const response = await fetch(`${BACKEND_URL}/update`, {
+		await fetch(`${BACKEND_URL}/update`, {
 			...options,
 			signal: controller.signal,
 			method: 'PUT',
@@ -112,13 +100,7 @@ export const actions = {
 			})
 		});
 		clearTimeout(timer);
-
-		if (response.status !== 200) {
-			return fail(400, {
-				error: 'Error updating container'
-			});
-		}
-		redirect(302, '/dashboard');
+		return { success: true };
 	},
 	delete: async ({ request, locals }) => {
 		const formData = await request.formData();
@@ -146,7 +128,7 @@ export const actions = {
 				error: 'Error deleting container'
 			});
 		}
-		redirect(302, '/dashboard');
+		throw redirect(303, '/dashboard');
 	},
 	logout: async ({ locals }) => {
 		const { error } = await locals.supabase.auth.signOut();

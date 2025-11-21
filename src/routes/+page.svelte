@@ -14,8 +14,8 @@
 				<a href="/login" class="text-sm text-zinc-400 transition-colors hover:text-white">
 					Sign in
 				</a>
-				<a href="/signup"
-					><Button class="bg-red-600 text-white hover:bg-red-700">Get Started</Button></a
+				<a href="/signup" class="rounded-sm bg-red-600 px-[0.8rem] py-[0.3rem] hover:bg-red-700"
+					>Get Started</a
 				>
 			</div>
 		</nav>

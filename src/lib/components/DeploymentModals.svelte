@@ -11,6 +11,7 @@
 	} from '@lucide/svelte';
 	import Switch from '$lib/components/ui/switch/switch.svelte';
 	import { enhance } from '$app/forms';
+	import { invalidate } from '$app/navigation';
 
 	let loading = $state(false);
 	let errorMessage = $state('');
@@ -73,7 +74,31 @@
 		selectedDeployment = null;
 	}
 
-	function submitForm() {
+	function createSubmitForm() {
+		close();
+		return async ({ result, update }) => {
+			await update();
+		};
+	}
+
+	function updateSubmitForm() {
+		loading = true;
+		errorMessage = '';
+
+		return async ({ result, update }) => {
+			loading = false;
+
+			if (result.type === 'failure') {
+				errorMessage = result.data?.error || 'Something went wrong';
+				return;
+			}
+
+			await update();
+			close();
+		};
+	}
+
+	function deleteSubmitForm() {
 		loading = true;
 		errorMessage = '';
 
@@ -107,7 +132,6 @@
 				</div>
 				<p class="mb-6 text-sm text-zinc-400">Deploy your project to TYSONCLOUD in seconds.</p>
 
-				<!-- Added tab navigation for deployment methods -->
 				<div class="mb-6 flex gap-2 border-b border-zinc-800">
 					<button
 						type="button"
@@ -152,7 +176,7 @@
 					method="POST"
 					enctype="multipart/form-data"
 					class="space-y-4"
-					use:enhance={submitForm}
+					use:enhance={createSubmitForm}
 				>
 					<div class="space-y-2">
 						<label for="name" class="block text-sm font-medium"> Project Name </label>
@@ -167,7 +191,6 @@
 						/>
 					</div>
 
-					<!-- Docker tab content -->
 					{#if createActiveTab === 'docker'}
 						<input type="hidden" name="deployment_type" value="docker" />
 						<div class="space-y-2">
@@ -183,7 +206,6 @@
 						</div>
 					{/if}
 
-					<!-- Git tab content -->
 					{#if createActiveTab === 'git'}
 						<input type="hidden" name="deployment_type" value="git" />
 						<div class="space-y-2">
@@ -199,7 +221,6 @@
 						</div>
 					{/if}
 
-					<!-- Prompt tab content -->
 					{#if createActiveTab === 'slop'}
 						<input type="hidden" name="deployment_type" value="slop" />
 						<div class="space-y-2">
@@ -329,7 +350,7 @@
 					Update the configuration for "{selectedDeployment.name}".
 				</p>
 
-				<form action="?/update" method="POST" class="space-y-4" use:enhance={submitForm}>
+				<form action="?/update" method="POST" class="space-y-4" use:enhance={updateSubmitForm}>
 					<input type="hidden" name="id" value={selectedDeployment.id} />
 					<input type="hidden" name="container_id" value={selectedDeployment.container_id} />
 					<div class="space-y-2">
@@ -343,7 +364,6 @@
 						/>
 					</div>
 
-					<!-- Show only Docker fields if deployment type is docker -->
 					{#if selectedDeployment.type === 'docker'}
 						<input type="hidden" name="type" value="docker" />
 						<div class="space-y-2">
@@ -404,7 +424,6 @@
 						</div>
 					{/if}
 
-					<!-- Show only Git fields if deployment type is git -->
 					{#if selectedDeployment.type === 'git'}
 						<input type="hidden" name="type" value="git" />
 						<div class="space-y-2">
@@ -420,32 +439,23 @@
 						</div>
 					{/if}
 
-					<!-- Show only Prompt field if deployment type is prompt -->
 					{#if selectedDeployment.type === 'slop'}
 						<input type="hidden" name="type" value="slop" />
-						<div class="space-y-2">
-							<!-- <textarea -->
-							<!-- 	id="update-prompt" -->
-							<!-- 	bind:value={updateFormData.prompt} -->
-							<!-- 	placeholder="Deploy a Node.js API with PostgreSQL database..." -->
-							<!-- 	class="min-h-[120px] w-full resize-none rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500" -->
-							<!-- 	required -->
-							<!-- ></textarea> -->
-						</div>
+						<div class="space-y-2"></div>
 					{/if}
 
-					<div class="flex gap-2 pt-4">
+					<div class="flex justify-between gap-2 pt-4">
 						<button
 							type="button"
 							onclick={close}
-							class="rounded-md border border-zinc-700 bg-transparent px-4 py-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+							class="w-[50%] rounded-md border border-zinc-700 bg-transparent px-4 py-2 text-zinc-400 hover:bg-zinc-800 hover:text-white"
 						>
 							Cancel
 						</button>
 						<button
 							disabled={loading}
 							type="submit"
-							class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+							class="w-[50%] rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
 						>
 							{#if loading}
 								. . .
@@ -477,9 +487,12 @@
 				<p class="mb-6 text-sm text-zinc-400">
 					Are you sure you want to delete "{selectedDeployment.name}"? This action cannot be undone.
 				</p>
-				<form action="?/delete" method="POST" use:enhance={submitForm}>
+				<form action="?/delete" method="POST" use:enhance={deleteSubmitForm}>
 					<input type="hidden" name="id" value={selectedDeployment.id} />
 					<input type="hidden" name="container_id" value={selectedDeployment.container_id} />
+					{#if errorMessage != ''}
+						<p class="text-red-500">{errorMessage}</p>
+					{/if}
 					<div class="flex gap-2">
 						<button
 							type="button"
@@ -491,7 +504,7 @@
 						<button
 							disabled={loading}
 							type="submit"
-							class="rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+							class="w-[50%] rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
 						>
 							{#if loading}
 								. . .
@@ -499,9 +512,6 @@
 								Delete Deployment
 							{/if}
 						</button>
-						{#if errorMessage != ''}
-							<p class="text-red-500">{errorMessage}</p>
-						{/if}
 					</div>
 				</form>
 			</div>

@@ -10,7 +10,6 @@
 	let deleteModalOpen = $state(false);
 	let logsModalOpen = $state(false);
 	let selectedDeployment = $state(null);
-	let totalDeployments = $state(data.deployments.length);
 	let logs = $state([]);
 
 	function handleUpdateClick(deployment) {
@@ -26,22 +25,17 @@
 	async function handleViewLogs(deployment) {
 		selectedDeployment = deployment;
 
-		const res = await fetch('/api/logs?container_id=' + deployment.id, {});
-
+		const res = await fetch('/api/logs?container_id=' + deployment.container_id, {});
 		const data = await res.json();
 		logs = data.logs || [];
 		logsModalOpen = true;
 	}
 
-	let creating = [];
-	let running = [];
-	for (let d of data.deployments) {
-		if (d.status === 'running') {
-			running.push(d);
-		} else {
-			creating.push(d);
-		}
-	}
+	let deployments = $derived(data.deployments);
+
+	let running = $derived(deployments.filter((d) => d.status === 'running'));
+	let creating = $derived(deployments.filter((d) => d.status !== 'running'));
+	let totalDeployments = $derived(data.deployments.length);
 </script>
 
 <div class="min-h-screen bg-black text-white">
@@ -53,12 +47,12 @@
 					<span class="text-lg font-bold">TYSONCLOUD</span>
 				</a>
 				<div class="flex items-center gap-4">
-					<button
-						class="flex items-center gap-2 rounded-md px-3 py-1 text-zinc-400 hover:bg-zinc-800 hover:text-white"
-					>
-						<Settings class="h-4 w-4" />
-						Settings
-					</button>
+					<!-- <button -->
+					<!-- 	class="flex items-center gap-2 rounded-md px-3 py-1 text-zinc-400 hover:bg-zinc-800 hover:text-white" -->
+					<!-- > -->
+					<!-- 	<Settings class="h-4 w-4" /> -->
+					<!-- 	Settings -->
+					<!-- </button> -->
 					<form action="?/logout" method="POST">
 						<button
 							class="flex items-center gap-2 rounded-md px-3 py-1 text-zinc-400 hover:bg-zinc-800 hover:text-white"
@@ -115,12 +109,6 @@
 									</div>
 								</div>
 								<div class="flex gap-1">
-									<button
-										class="flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-800 hover:text-white"
-										onclick={() => handleUpdateClick(deployment)}
-									>
-										<Settings class="h-4 w-4" />
-									</button>
 									<button
 										class="flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-800 hover:text-red-500"
 										onclick={() => handleDeleteClick(deployment)}
@@ -187,12 +175,6 @@
 							</div>
 							<div class="flex gap-1">
 								<button
-									class="flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-800 hover:text-white"
-									onclick={() => handleUpdateClick(deployment)}
-								>
-									<Settings class="h-4 w-4" />
-								</button>
-								<button
 									class="flex h-8 w-8 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-800 hover:text-red-500"
 									onclick={() => handleDeleteClick(deployment)}
 								>
@@ -237,17 +219,6 @@
 						</div>
 					</div>
 				{/each}
-
-				<button
-					class="flex h-full min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-zinc-800 bg-zinc-900 p-5 transition-colors hover:bg-zinc-800/50"
-					onclick={() => (createModalOpen = true)}
-				>
-					<div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800">
-						<Plus class="h-6 w-6 text-zinc-400" />
-					</div>
-					<p class="font-medium text-zinc-400">Deploy a new project</p>
-					<p class="mt-1 text-sm text-zinc-500">Click to get started</p>
-				</button>
 			</div>
 		</section>
 
