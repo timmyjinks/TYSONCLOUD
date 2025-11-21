@@ -2,7 +2,8 @@ import { redirect, fail } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { BACKEND_URL } from '$env/static/private';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, depends }) => {
+	depends('deployments');
 	const user = await locals.supabase.auth.getUser();
 	const session = await locals.supabase.auth.getSession();
 	if (!user.data.user) {
@@ -27,11 +28,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions = {
 	create: async ({ request, locals }) => {
-		const formData = await request.formData();
-		const name = formData.get('name') as string;
-		const source = formData.get('url') as string;
+		const formData: FormData = await request.formData();
 		const env_array = JSON.parse(formData.get('env')) ?? [];
-		const volume = (formData.get('volume') as string) || '/data';
+		let volume = (formData.get('volume') as string) || '/data';
 		const session = await locals.supabase.auth.getSession();
 
 		let env = {};
@@ -39,42 +38,37 @@ export const actions = {
 			env[env_array[i].key] = env_array[i].value;
 		}
 
-		const options = { timeout: 8000 };
-		const timeout = 8000;
-		const controller = new AbortController();
-		const timer = setTimeout(() => controller.abort, timeout);
+		const files = formData.get('files') as File;
+		if (files == null) {
+			formData.set('files', new File([], 'none', undefined));
+		} else if (files.name == '') {
+			formData.set('files', new File([], 'none', undefined));
+		}
 
-		const response = await fetch(`${BACKEND_URL}/create`, {
-			...options,
-			signal: controller.signal,
+		formData.set('env', JSON.stringify(env));
+		formData.set('volume', volume);
+
+		console.log(formData);
+
+		fetch(`${BACKEND_URL}/create`, {
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json',
 				Authorization: 'Bearer ' + session.data.session?.access_token
 			},
-			body: JSON.stringify({
-				name: name,
-				source: source,
-				env: env,
-				volume: volume
-			})
+			body: formData
 		});
-		clearTimeout(timer);
 
-		if (response.status !== 200) {
-			return fail(400, {
-				error: 'Error creating container'
-			});
-		}
-		redirect(302, '/dashboard');
+		return { success: true };
 	},
 	update: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const id = formData.get('id') as string;
+		const container_id = formData.get('container_id') as string;
 		const new_name = formData.get('name') as string;
 		const update = formData.get('update') ? true : false;
 		const volume = (formData.get('volume') as string) ?? '/data';
 		const env_array = JSON.parse(formData.get('env')) ?? [];
+		const type = (formData.get('type') as string) ?? '';
 		const session = await locals.supabase.auth.getSession();
 
 		let env = {};
@@ -87,7 +81,7 @@ export const actions = {
 		const controller = new AbortController();
 		const timer = setTimeout(() => controller.abort, timeout);
 
-		const response = await fetch(`${BACKEND_URL}/update`, {
+		await fetch(`${BACKEND_URL}/update`, {
 			...options,
 			signal: controller.signal,
 			method: 'PUT',
@@ -97,25 +91,25 @@ export const actions = {
 			},
 			body: JSON.stringify({
 				id: id,
+				container_id: container_id,
 				new_name: new_name,
 				update: update,
 				volume: volume,
-				env: env
+				env: env,
+				type: type
 			})
 		});
 		clearTimeout(timer);
-
-		if (response.status !== 200) {
-			return fail(400, {
-				error: 'Error updating container'
-			});
-		}
-		redirect(302, '/dashboard');
+		return { success: true };
 	},
 	delete: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const id = formData.get('id');
+		const container_id = formData.get('container_id');
 		const session = await locals.supabase.auth.getSession();
+
+		console.log(id);
+		console.log(container_id);
 
 		const response = await fetch(`${BACKEND_URL}/delete`, {
 			method: 'DELETE',
@@ -124,7 +118,8 @@ export const actions = {
 				Authorization: 'Bearer ' + session.data.session?.access_token
 			},
 			body: JSON.stringify({
-				id: id
+				id: id,
+				container_id: container_id
 			})
 		});
 
@@ -133,7 +128,7 @@ export const actions = {
 				error: 'Error deleting container'
 			});
 		}
-		redirect(302, '/dashboard');
+		throw redirect(303, '/dashboard');
 	},
 	logout: async ({ locals }) => {
 		const { error } = await locals.supabase.auth.signOut();
