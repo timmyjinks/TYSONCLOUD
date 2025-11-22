@@ -48,8 +48,6 @@ export const actions = {
 		formData.set('env', JSON.stringify(env));
 		formData.set('volume', volume);
 
-		console.log(formData);
-
 		fetch(`${BACKEND_URL}/create`, {
 			method: 'POST',
 			headers: {
@@ -107,9 +105,6 @@ export const actions = {
 		const id = formData.get('id');
 		const container_id = formData.get('container_id');
 		const session = await locals.supabase.auth.getSession();
-
-		console.log(id);
-		console.log(container_id);
 
 		const response = await fetch(`${BACKEND_URL}/delete`, {
 			method: 'DELETE',
