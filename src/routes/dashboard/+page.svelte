@@ -118,17 +118,6 @@
 								</div>
 							</div>
 
-							<div class="mb-4 flex items-center">
-								<a
-									href="https://{deployment.url}"
-									target="_blank"
-									class="flex items-center text-sm text-zinc-400 hover:text-red-400"
-								>
-									{deployment.url}
-									<ArrowUpRight class="ml-1 h-3 w-3" />
-								</a>
-							</div>
-
 							<div class="flex justify-between text-xs text-zinc-500">
 								<p>Last deployed</p>
 								<p>
