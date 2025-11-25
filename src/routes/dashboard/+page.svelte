@@ -2,6 +2,21 @@
 	import { ArrowUpRight, Cloud, LogOut, Plus, Settings, Trash2 } from '@lucide/svelte';
 	import DeploymentModals from '$lib/components/DeploymentModals.svelte';
 	import LogsModal from '$lib/components/LogsModal.svelte';
+	import { onDestroy } from 'svelte';
+	import { invalidate } from '$app/navigation';
+
+	interface Deployment {
+		id?: string;
+		container_id?: string;
+		user_id?: string;
+		name?: string;
+		url?: string;
+		source?: string;
+		status?: string;
+		created_at?: string;
+		type?: string;
+		volume?: string;
+	}
 
 	let { data } = $props();
 
@@ -9,20 +24,85 @@
 	let updateModalOpen = $state(false);
 	let deleteModalOpen = $state(false);
 	let logsModalOpen = $state(false);
-	let selectedDeployment = $state(null);
+	let selectedDeployment: Deployment = $state({});
 	let logs = $state([]);
 
-	function handleUpdateClick(deployment) {
+	let deployments = $derived(data.deployments);
+	let running = $derived(deployments.filter((d) => d.status === 'running'));
+	let creating = $derived(deployments.filter((d) => d.status !== 'running'));
+	let totalDeployments = $derived(data.deployments.length);
+
+	let pollingInterval: any | null = null;
+
+	async function pollCreatingDeployments() {
+		const inProgress = deployments.filter((d) => d.status !== 'running' && d.status !== 'failed');
+
+		if (inProgress.length === 0) {
+			if (pollingInterval) {
+				clearInterval(pollingInterval);
+				pollingInterval = null;
+			}
+			return;
+		}
+
+		// Poll each in-progress deployment
+		for (const deployment of inProgress) {
+			try {
+				const response = await fetch(`http://localhost:8000/deployment/${deployment.id}/status`, {
+					headers: {
+						Authorization: 'Bearer ' + data.token
+					}
+				});
+				if (response.ok) {
+					await invalidate('app:deployments');
+				}
+			} catch (error) {
+				console.error('Error polling deployment:', error);
+			}
+		}
+	}
+
+	function startPolling() {
+		if (pollingInterval) return;
+
+		pollingInterval = setInterval(() => {
+			pollCreatingDeployments();
+		}, 2000);
+
+		pollCreatingDeployments();
+	}
+
+	function handleDeploymentCreated(deploymentId: string) {
+		invalidate('app:deployments');
+		startPolling();
+	}
+
+	onDestroy(() => {
+		if (pollingInterval) {
+			clearInterval(pollingInterval);
+		}
+	});
+
+	// Auto-start polling if there are creating deployments on mount
+	$effect(() => {
+		const hasCreating = deployments.some((d) => d.status !== 'running' && d.status !== 'failed');
+
+		if (hasCreating && !pollingInterval) {
+			startPolling();
+		}
+	});
+
+	function handleUpdateClick(deployment: Deployment) {
 		selectedDeployment = deployment;
 		updateModalOpen = true;
 	}
 
-	function handleDeleteClick(deployment) {
+	function handleDeleteClick(deployment: Deployment) {
 		selectedDeployment = deployment;
 		deleteModalOpen = true;
 	}
 
-	async function handleViewLogs(deployment) {
+	async function handleViewLogs(deployment: Deployment) {
 		selectedDeployment = deployment;
 
 		const res = await fetch('/api/logs?container_id=' + deployment.container_id, {});
@@ -30,12 +110,6 @@
 		logs = data.logs || [];
 		logsModalOpen = true;
 	}
-
-	let deployments = $derived(data.deployments);
-
-	let running = $derived(deployments.filter((d) => d.status === 'running'));
-	let creating = $derived(deployments.filter((d) => d.status !== 'running'));
-	let totalDeployments = $derived(data.deployments.length);
 </script>
 
 <div class="min-h-screen bg-black text-white">
@@ -98,10 +172,8 @@
 											<span class="mr-2 inline-block h-2 w-2 rounded-full bg-yellow-500"></span>
 										{:else if deployment.status == 'created'}
 											<span class="mr-2 inline-block h-2 w-2 rounded-full bg-purple-500"></span>
-										{:else if deployment.status == 'building'}
-											<span class="mr-2 inline-block h-2 w-2 rounded-full bg-yellow-500"></span>
 										{:else if deployment.status == 'deploying'}
-											<span class="mr-2 inline-block h-2 w-2 rounded-full bg-orange-500"></span>
+											<span class="mr-2 inline-block h-2 w-2 rounded-full bg-orange-400"></span>
 										{:else if deployment.status == 'failed'}
 											<span class="mr-2 inline-block h-2 w-2 rounded-full bg-red-500"></span>
 										{/if}
@@ -239,9 +311,10 @@
 	{updateModalOpen}
 	{deleteModalOpen}
 	{selectedDeployment}
-	onCreateModalChange={(open) => (createModalOpen = open)}
-	onUpdateModalChange={(open) => (updateModalOpen = open)}
-	onDeleteModalChange={(open) => (deleteModalOpen = open)}
+	onCreateModalChange={(open: boolean) => (createModalOpen = open)}
+	onUpdateModalChange={(open: boolean) => (updateModalOpen = open)}
+	onDeleteModalChange={(open: boolean) => (deleteModalOpen = open)}
+	onDeploymentCreated={handleDeploymentCreated}
 />
 
 <LogsModal

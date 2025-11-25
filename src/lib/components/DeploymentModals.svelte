@@ -11,7 +11,6 @@
 	} from '@lucide/svelte';
 	import Switch from '$lib/components/ui/switch/switch.svelte';
 	import { enhance } from '$app/forms';
-	import { invalidate } from '$app/navigation';
 
 	let loading = $state(false);
 	let errorMessage = $state('');
@@ -23,11 +22,12 @@
 		selectedDeployment,
 		onCreateModalChange,
 		onUpdateModalChange,
-		onDeleteModalChange
+		onDeleteModalChange,
+		onDeploymentCreated
 	} = $props();
 
-	let createActiveTab = $state('docker');
-	let updateActiveTab = $state('docker');
+	let createActiveTab = $state('slop');
+	let updateActiveTab = $state('slop');
 
 	let createFormData = $state({
 		name: '',
@@ -75,9 +75,14 @@
 	}
 
 	function createSubmitForm() {
-		close();
 		return async ({ result, update }) => {
 			await update();
+
+			if (result.type === 'success' && result.data?.deploymentId) {
+				onDeploymentCreated?.(result.data.deploymentId);
+			}
+
+			close();
 		};
 	}
 
@@ -135,6 +140,18 @@
 				<div class="mb-6 flex gap-2 border-b border-zinc-800">
 					<button
 						type="button"
+						onclick={() => (createActiveTab = 'slop')}
+						class={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
+							createActiveTab === 'slop'
+								? 'border-red-500 text-red-500'
+								: 'border-transparent text-zinc-400 hover:text-white'
+						}`}
+					>
+						<Sparkles class="h-4 w-4" />
+						Prompt (BETA)
+					</button>
+					<button
+						type="button"
 						onclick={() => (createActiveTab = 'docker')}
 						class={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
 							createActiveTab === 'docker'
@@ -156,18 +173,6 @@
 					>
 						<GitBranch class="h-4 w-4" />
 						Git (BETA)
-					</button>
-					<button
-						type="button"
-						onclick={() => (createActiveTab = 'slop')}
-						class={`flex items-center gap-2 border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-							createActiveTab === 'slop'
-								? 'border-red-500 text-red-500'
-								: 'border-transparent text-zinc-400 hover:text-white'
-						}`}
-					>
-						<Sparkles class="h-4 w-4" />
-						Prompt (BETA)
 					</button>
 				</div>
 
@@ -208,7 +213,11 @@
 
 					{#if createActiveTab === 'git'}
 						<h3 class="text-lg font-semibold">This feature is in beta at the moment</h3>
-						<p class="text-zinc-400">For now though, you can use <a href="/workflow.yml">this</a> GitHub Actions workflow to create a new Docker Image from the Dockerfile in your repository on every push, then publish the resulting image to GitHub. The resulting package <i>will</i> work on TYSONCLOUD</p>
+						<p class="text-zinc-400">
+							For now though, you can use <a href="/workflow.yml">this</a> GitHub Actions workflow
+							to create a new Docker Image from the Dockerfile in your repository on every push,
+							then publish the resulting image to GitHub. The resulting package <i>will</i> work on TYSONCLOUD
+						</p>
 						<input type="hidden" name="deployment_type" value="git" />
 						<div class="space-y-2">
 							<label for="git-url" class="block text-sm font-medium"> Repository URL </label>
@@ -298,7 +307,7 @@
 								id="volume"
 								name="volume"
 								bind:value={createFormData.volume}
-								placeholder="/app/data"
+								placeholder="/data"
 								class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white"
 							/>
 						</div>
@@ -417,6 +426,7 @@
 								id="update-volume"
 								name="volume"
 								bind:value={updateFormData.volume}
+								placeholder="/data"
 								class="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white"
 							/>
 						</div>

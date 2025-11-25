@@ -3,7 +3,7 @@ import type { PageServerLoad } from './$types';
 import { BACKEND_URL } from '$env/static/private';
 
 export const load: PageServerLoad = async ({ locals, depends }) => {
-	depends('deployments');
+	depends('app:deployments');
 	const user = await locals.supabase.auth.getUser();
 	const session = await locals.supabase.auth.getSession();
 	if (!user.data.user) {
@@ -19,10 +19,11 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 		const data = await response.json();
 
 		return {
-			deployments: data.data
+			deployments: data,
+			token: session.data?.session?.access_token
 		};
 	} catch (err) {
-		return { deployments: [] };
+		return { deployments: [], token: '' };
 	}
 };
 
@@ -33,8 +34,11 @@ export const actions = {
 		let volume = (formData.get('volume') as string) || '/data';
 		const session = await locals.supabase.auth.getSession();
 
-		let env = {};
+		let env: { [key: string]: string } = {};
 		for (let i = 0; i < env_array.length; i++) {
+			if (env_array[i].key === '') {
+				continue;
+			}
 			env[env_array[i].key] = env_array[i].value;
 		}
 
@@ -48,7 +52,7 @@ export const actions = {
 		formData.set('env', JSON.stringify(env));
 		formData.set('volume', volume);
 
-		fetch(`${BACKEND_URL}/create`, {
+		const response = await fetch(`${BACKEND_URL}/create`, {
 			method: 'POST',
 			headers: {
 				Authorization: 'Bearer ' + session.data.session?.access_token
@@ -56,7 +60,9 @@ export const actions = {
 			body: formData
 		});
 
-		return { success: true };
+		let result = await response.json();
+
+		return { success: true, deploymentId: result.deploymentId };
 	},
 	update: async ({ request, locals }) => {
 		const formData = await request.formData();
@@ -69,8 +75,11 @@ export const actions = {
 		const type = (formData.get('type') as string) ?? '';
 		const session = await locals.supabase.auth.getSession();
 
-		let env = {};
+		let env: { [key: string]: string } = {};
 		for (let i = 0; i < env_array.length; i++) {
+			if (env_array[i].key === '') {
+				continue;
+			}
 			env[env_array[i].key] = env_array[i].value;
 		}
 
