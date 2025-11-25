@@ -155,7 +155,7 @@
 						}`}
 					>
 						<GitBranch class="h-4 w-4" />
-						Git
+						Git (BETA)
 					</button>
 					<button
 						type="button"
@@ -207,6 +207,8 @@
 					{/if}
 
 					{#if createActiveTab === 'git'}
+						<h3 class="text-lg font-semibold">This feature is in beta at the moment</h3>
+						<p class="text-zinc-400">For now though, you can use <a href="/workflow.yml">this</a> GitHub Actions workflow to create a new Docker Image from the Dockerfile in your repository on every push, then publish the resulting image to GitHub. The resulting package <i>will</i> work on TYSONCLOUD</p>
 						<input type="hidden" name="deployment_type" value="git" />
 						<div class="space-y-2">
 							<label for="git-url" class="block text-sm font-medium"> Repository URL </label>
