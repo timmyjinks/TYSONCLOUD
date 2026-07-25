@@ -22,6 +22,7 @@ func (s *Application) registerRoutes(
 
 	r.Handle("/services/{service_id}", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.GetService))).Methods("GET")
 	r.Handle("/projects/{project_id}/services", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.GetServices))).Methods("GET")
+	r.HandleFunc("/projects/{project_id}/services/{service_id}/logs", s.GetServiceLogs).Methods("GET")
 	r.Handle("/projects/{project_id}/services", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.CreateService))).Methods("POST")
 	r.Handle("/projects/{project_id}/services/{service_id}", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.UpdateService))).Methods("PUT")
 	r.Handle("/projects/{project_id}/services/{service_id}", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.DeleteService))).Methods("DELETE")
@@ -35,9 +36,6 @@ func (s *Application) registerRoutes(
 	r.Handle("/projects/{project_id}/databases", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.CreateDatabase))).Methods("POST")
 	r.Handle("/projects/{project_id}/databases/{database_id}", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.UpdateDatabase))).Methods("PUT")
 	r.Handle("/projects/{project_id}/databases/{database_id}", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.DeleteDatabase))).Methods("DELETE")
-
-	r.HandleFunc("/services/{service_id}/logs", nil).Methods("GET")
-	r.HandleFunc("/tasks/{task_id}", s.HandleTaskWS)
 
 	return nil
 }

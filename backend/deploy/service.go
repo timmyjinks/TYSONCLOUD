@@ -6,6 +6,10 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
+func (d *DeployService) GetServiceLogs(ctx context.Context, service Service, lines chan string) error {
+	return d.svc.GetDeploymentLogs(ctx, ServiceToResource(service), lines)
+}
+
 func (d *DeployService) CreateService(ctx context.Context, service Service) error {
 	if err := d.svc.CreateService(ctx, ServiceToResource(service)); err != nil {
 		return err
