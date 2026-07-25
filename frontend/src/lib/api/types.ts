@@ -46,6 +46,7 @@ export type Database = {
   port: number;
   storage: number;
   internal_domain: string;
+  env: Record<string, string>;
   created_at: string;
 };
 

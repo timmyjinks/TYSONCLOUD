@@ -37,6 +37,15 @@ func (app *Application) GetDatabase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	env, err := app.Deploy.GetServiceEnv(r.Context(), deploy.Service{
+		Namespace: "proj-" + database.ProjectId,
+		Name:      database.ResourceName + "-app",
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(DatabaseResponse{
 		Id:             database.Id,
@@ -46,6 +55,7 @@ func (app *Application) GetDatabase(w http.ResponseWriter, r *http.Request) {
 		Port:           database.Port,
 		Storage:        database.StorageGB,
 		InternalDomain: database.InternalDomain,
+		Env:            env,
 		CreatedAt:      database.CreatedAt,
 	}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

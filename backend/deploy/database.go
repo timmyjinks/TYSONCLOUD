@@ -7,6 +7,13 @@ import (
 	"github.com/timmyjinks/tysoncloud/kubernetes"
 )
 
+func (d *DeployService) DeleteDatabaseEnv(ctx context.Context, database Database) (map[string]string, error) {
+	return d.svc.GetSecret(ctx, kubernetes.Resource{
+		Namespace: database.Namespace,
+		Name:      database.Name,
+	})
+}
+
 func (d *DeployService) CreateDatabase(ctx context.Context, database Database) error {
 	switch database.Engine {
 	case "postgres":
