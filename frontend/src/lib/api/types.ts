@@ -1,5 +1,3 @@
-// Mirrors backend/server/model.go response/request shapes.
-
 export type Project = {
   id: string;
   name: string;
@@ -29,12 +27,14 @@ export type ServiceCreateRequest = {
   name: string;
   image: string;
   port: number;
+  env?: string;
 };
 
 export type ServiceUpdateRequest = {
   name?: string;
   image?: string;
   port?: number;
+  env?: string;
 };
 
 export type Database = {
