@@ -68,6 +68,26 @@ function DatabaseDetail() {
         </Card>
       </section>
 
+      <section className="mb-8">
+        <h2 className="mb-4 text-lg font-semibold">Environment variables</h2>
+        <Card>
+          <CardContent className="pt-5">
+            {Object.keys(database.env ?? {}).length > 0 ? (
+              <dl className="space-y-2">
+                {Object.entries(database.env).map(([key, value]) => (
+                  <div key={key} className="break-all font-mono text-sm">
+                    <dt className="inline text-[var(--color-text)]">{key}</dt>
+                    <dd className="inline text-[var(--color-text-faint)]">={value}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <p className="text-sm text-[var(--color-text-faint)]">No environment variables set.</p>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
       <section className="flex gap-4">
         <Link
           to="/projects/$projectId/databases/$databaseId/edit"

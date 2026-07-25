@@ -35,6 +35,15 @@ func (app *Application) GetService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	env, err := app.Deploy.GetServiceEnv(r.Context(), deploy.Service{
+		Namespace: "proj-" + service.ProjectId,
+		Name:      service.ResourceName,
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(ServiceResponse{
 		Id:             service.Id,
@@ -45,6 +54,7 @@ func (app *Application) GetService(w http.ResponseWriter, r *http.Request) {
 		Status:         service.Status,
 		PublicDomain:   service.PublicDomain,
 		InternalDomain: service.PrivateDomain,
+		Env:            env,
 		CreatedAt:      service.CreatedAt,
 	}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
