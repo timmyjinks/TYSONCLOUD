@@ -89,6 +89,26 @@ function ServiceDetail() {
       </section>
 
       <section className="mb-8">
+        <h2 className="mb-4 text-lg font-semibold">Environment variables</h2>
+        <Card>
+          <CardContent className="pt-5">
+            {Object.keys(service.env ?? {}).length > 0 ? (
+              <dl className="space-y-2">
+                {Object.entries(service.env).map(([key, value]) => (
+                  <div key={key} className="flex items-baseline gap-2 font-mono text-sm">
+                    <dt className="text-[var(--color-text)]">{key}</dt>
+                    <dd className="truncate text-[var(--color-text-faint)]">={value}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <p className="text-sm text-[var(--color-text-faint)]">No environment variables set.</p>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="mb-8">
         <h2 className="mb-4 text-lg font-semibold">Volume</h2>
         <Card>
           <CardContent className="pt-5">

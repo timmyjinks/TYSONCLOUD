@@ -26,6 +26,11 @@ function EditServicePage() {
     setName(service.name);
     setImage(service.image);
     setPort(String(service.port));
+    setEnv(
+      Object.entries(service.env ?? {})
+        .map(([key, value]) => `${key}=${value}`)
+        .join("\n"),
+    );
   }, [service]);
 
   return (
@@ -94,8 +99,8 @@ function EditServicePage() {
             className="mt-2"
           />
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            One <code>KEY=value</code> pair per line. Existing values aren't shown here for
-            security — leave blank to keep them unchanged, or re-enter to replace them.
+            One <code>KEY=value</code> pair per line. Saving replaces the full set of
+            environment variables with what's shown here.
           </p>
         </div>
 

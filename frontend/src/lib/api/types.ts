@@ -20,6 +20,7 @@ export type Service = {
   status: string;
   public_domain: string;
   private_domain: string; // conceptually "internal_domain"
+  env: Record<string, string>;
   created_at: string;
 };
 
