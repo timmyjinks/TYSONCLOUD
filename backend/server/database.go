@@ -214,7 +214,9 @@ func (app *Application) DeleteDatabase(w http.ResponseWriter, r *http.Request) {
 	if err := app.Deploy.DeleteDatabase(r.Context(), deploy.Database{
 		Namespace: "proj-" + projectId,
 		Name:      "db-" + databaseId,
+		Engine:    "postgres",
 	}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
