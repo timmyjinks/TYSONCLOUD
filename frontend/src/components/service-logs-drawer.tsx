@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 type ServiceLogsDrawerProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  projectId: string;
   serviceId: string;
   serviceName: string;
 };
@@ -23,10 +24,11 @@ const STATUS_LABEL: Record<LogStreamStatus, string> = {
 export function ServiceLogsDrawer({
   open,
   onOpenChange,
+  projectId,
   serviceId,
   serviceName,
 }: ServiceLogsDrawerProps) {
-  const { lines, status, clear, firstLineNumber } = useLogStream(serviceId, open);
+  const { lines, status, clear, firstLineNumber } = useLogStream(projectId, serviceId, open);
   const [autoscroll, setAutoscroll] = useState(true);
 
   function handleCopy() {

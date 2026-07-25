@@ -1,12 +1,16 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/clerk/clerk-sdk-go/v2"
+	clerkjwt "github.com/clerk/clerk-sdk-go/v2/jwt"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/timmyjinks/tysoncloud/deploy"
 	"github.com/timmyjinks/tysoncloud/store"
 	"github.com/timmyjinks/tysoncloud/util"
@@ -17,7 +21,7 @@ var invalidServiceId error = errors.New("service with id not found")
 func (app *Application) GetService(w http.ResponseWriter, r *http.Request) {
 	serviceId := mux.Vars(r)["service_id"]
 	if serviceId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		http.Error(w, "service with id not found", http.StatusBadRequest)
 		return
 	}
 
@@ -77,6 +81,80 @@ func (app *Application) GetServices(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(ToServicesResponse(services)); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+}
+
+func (app *Application) GetServiceLogs(w http.ResponseWriter, r *http.Request) {
+	projectId := mux.Vars(r)["project_id"]
+	if projectId == "" {
+		http.Error(w, "project with id not found", http.StatusBadRequest)
+		return
+	}
+
+	serviceId := mux.Vars(r)["service_id"]
+	if serviceId == "" {
+		http.Error(w, "service with id not found", http.StatusBadRequest)
+		return
+	}
+
+	cookie, err := r.Cookie("__session")
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	claims, err := clerkjwt.Verify(r.Context(), &clerkjwt.VerifyParams{Token: cookie.Value})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	userId := claims.Subject
+
+	service, err := app.Supabase.GetService(serviceId, userId)
+	if err != nil {
+		http.Error(w, "service not found", http.StatusNotFound)
+		return
+	}
+
+	allowedOrigins := parseAllowedOrigins(app.Config.Server.AllowedOrigins)
+	upgrader := websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			origin := r.Header.Get("Origin")
+			if origin == "" {
+				return true
+			}
+			return allowedOrigins[origin]
+		},
+	}
+	ws, err := upgrader.Upgrade(w, r, http.Header{})
+	if err != nil {
+		slog.Error(err.Error())
+		return
+	}
+	defer ws.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	lines := make(chan string)
+	go func() {
+		defer close(lines)
+		err := app.Deploy.GetServiceLogs(ctx, deploy.Service{
+			Namespace: "proj-" + projectId,
+			Name:      service.ResourceName,
+		}, lines)
+		if err != nil {
+			slog.Error(err.Error())
+		}
+	}()
+
+	for line := range lines {
+		if err := ws.WriteJSON(struct {
+			Message string `json:"message"`
+		}{Message: line}); err != nil {
+			break
+		}
 	}
 }
 

@@ -182,6 +182,7 @@ function ServiceDetail() {
       <ServiceLogsDrawer
         open={logsOpen}
         onOpenChange={setLogsOpen}
+        projectId={projectId}
         serviceId={service.id}
         serviceName={service.name}
       />

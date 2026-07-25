@@ -1,7 +1,9 @@
 package kubernetes
 
 import (
+	"bufio"
 	"context"
+	"fmt"
 
 	"github.com/timmyjinks/tysoncloud/util"
 	corev1 "k8s.io/api/core/v1"
@@ -89,6 +91,36 @@ func (d *KubernetesService) CreateDeployment(ctx context.Context, resource Resou
 		return err
 	}
 	return nil
+}
+
+func (d *KubernetesService) GetDeploymentLogs(ctx context.Context, resource Resource, lines chan string) error {
+	pods, err := d.clientset.CoreV1().Pods(resource.Namespace).List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app=%s", resource.Name),
+	})
+	if err != nil {
+		return err
+	}
+
+	var tail int64 = 200
+	req := d.clientset.CoreV1().Pods(resource.Namespace).GetLogs(pods.Items[0].Name, &corev1.PodLogOptions{
+		Follow:    true,
+		TailLines: &tail,
+	})
+	stream, err := req.Stream(ctx)
+	if err != nil {
+		return err
+	}
+	defer stream.Close()
+
+	scanner := bufio.NewScanner(stream)
+	for scanner.Scan() {
+		select {
+		case lines <- scanner.Text():
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+	return scanner.Err()
 }
 
 func (d *KubernetesService) DeleteDeployment(ctx context.Context, resource Resource) error {

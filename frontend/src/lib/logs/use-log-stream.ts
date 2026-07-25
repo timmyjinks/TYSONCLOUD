@@ -15,15 +15,7 @@ function wsUrl(path: string) {
   return url.toString();
 }
 
-/** Mirrors client.ts — websockets can't carry an Authorization header, so
- *  the token has to travel as a query param instead. */
-async function getToken(): Promise<string | null> {
-  const clerk = (window as any).Clerk;
-  if (!clerk?.session) return null;
-  return clerk.session.getToken();
-}
-
-export function useLogStream(serviceId: string, enabled: boolean) {
+export function useLogStream(projectId: string, serviceId: string, enabled: boolean) {
   const [lines, setLines] = useState<string[]>([]);
   const [dropped, setDropped] = useState(0);
   const [status, setStatus] = useState<LogStreamStatus>("connecting");
@@ -46,10 +38,8 @@ export function useLogStream(serviceId: string, enabled: boolean) {
 
     async function connect() {
       setStatus("connecting");
-      const token = await getToken();
       const url =
-        wsUrl(`/services/${serviceId}/logs`) +
-        (token ? `?token=${encodeURIComponent(token)}` : "");
+        wsUrl(`/projects/${projectId}/services/${serviceId}/logs`)
       const ws = new WebSocket(url);
       wsRef.current = ws;
 
@@ -95,7 +85,7 @@ export function useLogStream(serviceId: string, enabled: boolean) {
       wsRef.current?.close();
       wsRef.current = null;
     };
-  }, [serviceId, enabled]);
+  }, [projectId, serviceId, enabled]);
 
   return { lines, status, clear, firstLineNumber: dropped + 1 };
 }
