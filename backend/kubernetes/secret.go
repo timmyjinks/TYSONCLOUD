@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/timmyjinks/tysoncloud/util"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	appcorev1 "k8s.io/client-go/applyconfigurations/core/v1"
 	appmetav1 "k8s.io/client-go/applyconfigurations/meta/v1"
@@ -31,4 +32,20 @@ func (d *KubernetesService) CreateSecret(ctx context.Context, resource Resource)
 
 func (d *KubernetesService) DeleteSecret(ctx context.Context, resource Resource) error {
 	return d.clientset.CoreV1().Secrets(resource.Namespace).Delete(ctx, resource.Name, metav1.DeleteOptions{})
+}
+
+func (d *KubernetesService) GetSecret(ctx context.Context, resource Resource) (map[string]string, error) {
+	secret, err := d.clientset.CoreV1().Secrets(resource.Namespace).Get(ctx, resource.Name, metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return map[string]string{}, nil
+		}
+		return nil, err
+	}
+
+	env := make(map[string]string, len(secret.Data))
+	for k, v := range secret.Data {
+		env[k] = string(v)
+	}
+	return env, nil
 }

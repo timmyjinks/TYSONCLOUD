@@ -24,7 +24,7 @@ func (d *KubernetesService) CreatePostgresDatabase(ctx context.Context, resource
 		Spec: cnpgv1.ClusterSpec{
 			InheritedMetadata: &cnpgv1.EmbeddedObjectMetadata{
 				Labels: map[string]string{
-					"app.kubernetes.io/component": "resource",
+					"app.kubernetes.io/component": "database",
 				},
 			},
 			Instances: 1,

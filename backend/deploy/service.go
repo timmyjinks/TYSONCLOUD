@@ -2,6 +2,8 @@ package deploy
 
 import (
 	"context"
+
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func (d *DeployService) CreateService(ctx context.Context, service Service) error {
@@ -11,6 +13,10 @@ func (d *DeployService) CreateService(ctx context.Context, service Service) erro
 
 	if len(service.Env) != 0 {
 		if err := d.svc.CreateSecret(ctx, ServiceToResource(service)); err != nil {
+			return err
+		}
+	} else {
+		if err := d.svc.DeleteSecret(ctx, ServiceToResource(service)); err != nil && !apierrors.IsNotFound(err) {
 			return err
 		}
 	}
@@ -29,18 +35,17 @@ func (d *DeployService) CreateService(ctx context.Context, service Service) erro
 
 	return nil
 }
+func (d *DeployService) GetServiceEnv(ctx context.Context, service Service) (map[string]string, error) {
+	return d.svc.GetSecret(ctx, ServiceToResource(service))
+}
 
 func (d *DeployService) DeleteService(ctx context.Context, service Service) error {
-	// if service.Volume != nil {
-	// 	if err := d.svc.DeletePVC(ctx, ServiceToResource(service)); err != nil {
-	// 		return err
-	// 	}
-	// }
+	if err := d.svc.DeleteSecret(ctx, ServiceToResource(service)); err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
 
-	if len(service.Env) != 0 {
-		if err := d.svc.DeleteSecret(ctx, ServiceToResource(service)); err != nil {
-			return err
-		}
+	if err := d.svc.DeletePVC(ctx, ServiceToResource(service)); err != nil && !apierrors.IsNotFound(err) {
+		return err
 	}
 
 	if err := d.svc.DeleteHPA(ctx, ServiceToResource(service)); err != nil {
