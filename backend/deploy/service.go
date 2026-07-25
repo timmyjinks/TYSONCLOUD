@@ -35,6 +35,7 @@ func (d *DeployService) CreateService(ctx context.Context, service Service) erro
 
 	return nil
 }
+
 func (d *DeployService) GetServiceEnv(ctx context.Context, service Service) (map[string]string, error) {
 	return d.svc.GetSecret(ctx, ServiceToResource(service))
 }

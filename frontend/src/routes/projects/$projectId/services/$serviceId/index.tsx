@@ -95,9 +95,9 @@ function ServiceDetail() {
             {Object.keys(service.env ?? {}).length > 0 ? (
               <dl className="space-y-2">
                 {Object.entries(service.env).map(([key, value]) => (
-                  <div key={key} className="flex items-baseline gap-2 font-mono text-sm">
-                    <dt className="text-[var(--color-text)]">{key}</dt>
-                    <dd className="truncate text-[var(--color-text-faint)]">={value}</dd>
+                  <div key={key} className="break-all font-mono text-sm">
+                    <dt className="inline text-[var(--color-text)]">{key}</dt>
+                    <dd className="inline text-[var(--color-text-faint)]">={value}</dd>
                   </div>
                 ))}
               </dl>
