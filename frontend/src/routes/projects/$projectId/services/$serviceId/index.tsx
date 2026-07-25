@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { ServiceLogsDrawer } from "@/components/service-logs-drawer";
 
 export const Route = createFileRoute("/projects/$projectId/services/$serviceId/")({
   component: ServiceDetail,
@@ -25,6 +26,7 @@ function ServiceDetail() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [mountPath, setMountPath] = useState("");
   const [storageGB, setStorageGB] = useState("5");
+  const [logsOpen, setLogsOpen] = useState(false);
 
   if (isLoading || !service) {
     return (
@@ -158,6 +160,9 @@ function ServiceDetail() {
         <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
           Delete service
         </Button>
+        <Button variant="outline" onClick={() => setLogsOpen(true)}>
+          View logs
+        </Button>
       </section>
 
       <DeleteConfirmDialog
@@ -172,6 +177,13 @@ function ServiceDetail() {
             onSuccess: () => navigate({ to: "/projects/$projectId", params: { projectId } }),
           })
         }
+      />
+
+      <ServiceLogsDrawer
+        open={logsOpen}
+        onOpenChange={setLogsOpen}
+        serviceId={service.id}
+        serviceName={service.name}
       />
     </main>
   );
