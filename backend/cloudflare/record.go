@@ -2,15 +2,16 @@ package cloudflare
 
 import (
 	"context"
-	"github.com/cloudflare/cloudflare-go/v6"
-	"github.com/cloudflare/cloudflare-go/v6/dns"
+	"github.com/cloudflare/cloudflare-go/v7"
+	"github.com/cloudflare/cloudflare-go/v7/dns"
 )
 
 func (c *CloudflareService) CreateRecord(ctx context.Context, hostname string) error {
-	_, err := c.Cli.DNS.Records.New(ctx, dns.RecordNewParams{
+	name := hostname + c.baseDomain
+	_, err := c.cli.DNS.Records.New(ctx, dns.RecordNewParams{
 		ZoneID: cloudflare.String(c.zoneID),
 		Body: dns.CNAMERecordParam{
-			Name:    cloudflare.String(hostname),
+			Name:    cloudflare.String(name),
 			Content: cloudflare.String(c.tunnelID + ".cfargotunnel.com"),
 			Proxied: cloudflare.Bool(true),
 			Type:    cloudflare.F(dns.CNAMERecordTypeCNAME),
@@ -23,9 +24,9 @@ func (c *CloudflareService) CreateRecord(ctx context.Context, hostname string) e
 	return nil
 }
 
-func (c *CloudflareService) DeleteRecord(ctx context.Context, subdomain string) error {
-	name := subdomain + c.baseDomain
-	res, err := c.Cli.DNS.Records.List(ctx, dns.RecordListParams{
+func (c *CloudflareService) DeleteRecord(ctx context.Context, hostname string) error {
+	name := hostname + c.baseDomain
+	res, err := c.cli.DNS.Records.List(ctx, dns.RecordListParams{
 		ZoneID: cloudflare.String(c.zoneID),
 	})
 	if err != nil {
@@ -46,7 +47,7 @@ func (c *CloudflareService) DeleteRecord(ctx context.Context, subdomain string) 
 		return nil
 	}
 
-	c.Cli.DNS.Records.Delete(ctx, record.ID, dns.RecordDeleteParams{
+	c.cli.DNS.Records.Delete(ctx, record.ID, dns.RecordDeleteParams{
 		ZoneID: cloudflare.String(c.zoneID),
 	})
 

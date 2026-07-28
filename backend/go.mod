@@ -3,10 +3,9 @@ module github.com/timmyjinks/tysoncloud
 go 1.26.4
 
 require (
-	github.com/BurntSushi/toml v1.6.0
-	github.com/caarlos0/env/v6 v6.10.1
 	github.com/clerk/clerk-sdk-go/v2 v2.7.0
 	github.com/cloudflare/cloudflare-go/v6 v6.4.0
+	github.com/cloudflare/cloudflare-go/v7 v7.8.0
 	github.com/cloudnative-pg/cloudnative-pg v1.30.0
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674

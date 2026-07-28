@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cloudflare/cloudflare-go/v6"
-	"github.com/cloudflare/cloudflare-go/v6/zero_trust"
+	"github.com/cloudflare/cloudflare-go/v7"
+	"github.com/cloudflare/cloudflare-go/v7/zero_trust"
 )
 
 func (c *CloudflareService) GetRoutes(ctx context.Context) ([]zero_trust.TunnelCloudflaredConfigurationGetResponseConfigIngress, error) {
-	res, err := c.Cli.ZeroTrust.Tunnels.Cloudflared.Configurations.Get(ctx, c.tunnelID, zero_trust.TunnelCloudflaredConfigurationGetParams{
+	res, err := c.cli.ZeroTrust.Tunnels.Cloudflared.Configurations.Get(ctx, c.tunnelID, zero_trust.TunnelCloudflaredConfigurationGetParams{
 		AccountID: cloudflare.String(c.accountID),
 	})
 	if err != nil {
@@ -23,7 +23,8 @@ func (c *CloudflareService) GetRoutes(ctx context.Context) ([]zero_trust.TunnelC
 func (c *CloudflareService) CreateRoute(ctx context.Context, subdomain string) error {
 	hostname := fmt.Sprintf("%s.%s", subdomain, c.baseDomain)
 	service := fmt.Sprintf("https://%s", hostname)
-	res, err := c.Cli.ZeroTrust.Tunnels.Cloudflared.Configurations.Get(ctx, c.tunnelID, zero_trust.TunnelCloudflaredConfigurationGetParams{
+
+	res, err := c.cli.ZeroTrust.Tunnels.Cloudflared.Configurations.Get(ctx, c.tunnelID, zero_trust.TunnelCloudflaredConfigurationGetParams{
 		AccountID: cloudflare.String(c.accountID),
 	})
 	if err != nil {
@@ -51,7 +52,7 @@ func (c *CloudflareService) CreateRoute(ctx context.Context, subdomain string) e
 
 func (c *CloudflareService) DeleteRoute(ctx context.Context, subdomain string) error {
 	url := fmt.Sprintf("%s.%s", subdomain, c.baseDomain)
-	res, err := c.Cli.ZeroTrust.Tunnels.Cloudflared.Configurations.Get(ctx, c.tunnelID, zero_trust.TunnelCloudflaredConfigurationGetParams{
+	res, err := c.cli.ZeroTrust.Tunnels.Cloudflared.Configurations.Get(ctx, c.tunnelID, zero_trust.TunnelCloudflaredConfigurationGetParams{
 		AccountID: cloudflare.String(c.accountID),
 	})
 	if err != nil {
@@ -102,7 +103,7 @@ func (c *CloudflareService) updateIngress(ctx context.Context, ingress []zero_tr
 		})
 	}
 
-	if _, err := c.Cli.ZeroTrust.Tunnels.Cloudflared.Configurations.Update(ctx, c.tunnelID, zero_trust.TunnelCloudflaredConfigurationUpdateParams{
+	if _, err := c.cli.ZeroTrust.Tunnels.Cloudflared.Configurations.Update(ctx, c.tunnelID, zero_trust.TunnelCloudflaredConfigurationUpdateParams{
 		AccountID: cloudflare.String(c.accountID),
 		Config: cloudflare.F(zero_trust.TunnelCloudflaredConfigurationUpdateParamsConfig{
 			Ingress: cloudflare.F(updateConfig),

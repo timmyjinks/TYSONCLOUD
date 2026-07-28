@@ -1,24 +1,24 @@
 package cloudflare
 
 import (
-	"github.com/cloudflare/cloudflare-go/v6"
-	"github.com/cloudflare/cloudflare-go/v6/option"
+	"github.com/cloudflare/cloudflare-go/v7"
+	"github.com/cloudflare/cloudflare-go/v7/option"
 )
 
 type CloudflareService struct {
-	Cli        *cloudflare.Client
+	cli        *cloudflare.Client
 	accountID  string
 	tunnelID   string
 	zoneID     string
 	baseDomain string
 }
 
-func NewCloudflareService(apiToken, tunnelId, zoneId, baseDomain string) *CloudflareService {
+func NewCloudflareService(apiToken, accountId, tunnelId, zoneId, baseDomain string) *CloudflareService {
 	cli := cloudflare.NewClient(option.WithAPIToken(apiToken))
 
 	return &CloudflareService{
-		Cli:        cli,
-		accountID:  apiToken,
+		cli:        cli,
+		accountID:  accountId,
 		tunnelID:   tunnelId,
 		zoneID:     zoneId,
 		baseDomain: baseDomain,

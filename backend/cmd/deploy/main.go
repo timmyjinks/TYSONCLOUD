@@ -18,9 +18,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cfg.UpdateFromArgs()
 
-	cloudflareService := cloudflare.NewCloudflareService(cfg.Cloudflare.ApiToken, cfg.Cloudflare.TunnelID, cfg.Cloudflare.ZoneID, cfg.Cloudflare.BaseDomain)
+	cloudflareService := cloudflare.NewCloudflareService(cfg.Cloudflare.ApiToken, cfg.Cloudflare.AccountID, cfg.Cloudflare.TunnelID, cfg.Cloudflare.ZoneID, cfg.Cloudflare.BaseDomain)
 	supabaseCli, err := db.NewSupabaseStorage(cfg.Supabase.ProjectURL, cfg.Supabase.APIKey)
 	if err != nil {
 		panic(err)

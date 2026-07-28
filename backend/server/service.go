@@ -213,15 +213,15 @@ func (app *Application) CreateService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// if err := app.Cloudflare.CreateRecord(r.Context(), res.PublicDomain); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-	//
-	// if err := app.Cloudflare.CreateRoute(r.Context(), res.PublicDomain); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
+	if err := app.Cloudflare.CreateRecord(r.Context(), "tc-"+res.Id); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := app.Cloudflare.CreateRoute(r.Context(), "tc-"+res.Id); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	if _, err := app.Supabase.UpdateServiceStatus(res.Id, userId, "running"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -344,15 +344,15 @@ func (app *Application) DeleteService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// if err := app.Cloudflare.DeleteRecord(r.Context(), "tc-"+serviceId); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-	//
-	// if err := app.Cloudflare.DeleteRoute(r.Context(), "tc-"+serviceId); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
+	if err := app.Cloudflare.DeleteRecord(r.Context(), "tc-"+serviceId); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := app.Cloudflare.DeleteRoute(r.Context(), "tc-"+serviceId); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(204)
 }
