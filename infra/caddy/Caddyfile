@@ -1,0 +1,15 @@
+{
+    email {env.CF_EMAIL}
+    acme_dns cloudflare {env.CF_API_TOKEN}
+}
+
+tc.tysonjenkins.dev *.tysoncloud.tysonjenkins.dev {
+	reverse_proxy 192.168.0.220
+
+  encode gzip
+
+  log {
+    output file /var/log/caddy/tc.tysonjenkins.dev.log
+    format json
+  }
+}
