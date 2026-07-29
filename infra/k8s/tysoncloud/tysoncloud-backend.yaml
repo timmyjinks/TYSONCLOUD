@@ -1,0 +1,92 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: tysoncloud-backend
+  namespace: tysoncloud
+spec:
+  parentRefs:
+    - name: tysoncloud-gateway
+      namespace: tc-system
+  hostnames:
+    - "tc-api.tysonjenkins.dev"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: tysoncloud-backend
+          port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tysoncloud-backend
+  namespace: tysoncloud
+  labels:
+    app: tysoncloud-backend
+spec:
+  selector:
+    app: tysoncloud-backend
+  ports:
+    - protocol: "TCP"
+      port: 80
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tysoncloud-backend
+  labels:
+    app: tysoncloud-backend
+  namespace: tysoncloud
+spec:
+  selector:
+    matchLabels:
+      app: tysoncloud-backend
+  template:
+    metadata:
+      labels:
+        app: tysoncloud-backend
+    spec:
+      containers:
+        - name: tysoncloud-backend
+          image: timmijinks/tysoncloud-backend
+          ports:
+            - containerPort: 8080
+          env:
+            - name: LISTEN_ADDR
+              valueFrom:
+                secretKeyRef:
+                  key: LISTEN_ADDR
+                  name: tysoncloud
+            - name: SUPABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: SUPABASE_URL
+                  name: tysoncloud
+            - name: SUPABASE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SUPABASE_API_KEY
+                  name: tysoncloud
+            - name: CLOUDFLARE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: CLOUDFLARE_API_TOKEN
+                  name: tysoncloud
+            - name: TUNNEL_ID
+              valueFrom:
+                secretKeyRef:
+                  key: TUNNEL_ID
+                  name: tysoncloud
+            - name: ACCOUNT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: ACCOUNT_ID
+                  name: tysoncloud
+            - name: ZONE_ID
+              valueFrom:
+                secretKeyRef:
+                  key: ZONE_ID
+                  name: tysoncloud
