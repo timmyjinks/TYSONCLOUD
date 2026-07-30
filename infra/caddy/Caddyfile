@@ -4,9 +4,7 @@
 }
 
 http://tc.tysonjenkins.dev, http://*.tysoncloud.tysonjenkins.dev {
-    reverse_proxy 192.168.0.220:80 {
-        header_up Host {host}
-    }
+    redir https://{host}{uri} permanent
 }
 
 
