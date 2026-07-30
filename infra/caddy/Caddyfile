@@ -3,13 +3,38 @@
     acme_dns cloudflare {env.CF_API_TOKEN}
 }
 
-tc.tysonjenkins.dev *.tysoncloud.tysonjenkins.dev {
-	reverse_proxy 192.168.0.220
-
-  encode gzip
-
-  log {
-    output file /var/log/caddy/tc.tysonjenkins.dev.log
-    format json
-  }
+http://tc.tysonjenkins.dev, http://*.tysoncloud.tysonjenkins.dev {
+    reverse_proxy 192.168.0.220:80 {
+        header_up Host {host}
+    }
 }
+
+
+tc.tysonjenkins.dev, *.tysoncloud.tysonjenkins.dev {
+    reverse_proxy https://192.168.0.220:443 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+
+        transport http {
+            tls
+            tls_insecure_skip_verify
+            tls_server_name {host}
+        }
+    }
+
+    encode gzip
+
+    log {
+        output file /var/log/caddy/tc.tysonjenkins.dev.log
+        format json
+    }
+
+   handle_errors 5xx {
+     root * /var/www/errors
+     rewrite * /5xx.html
+     file_server
+    }
+}
+
