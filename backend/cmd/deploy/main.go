@@ -32,9 +32,6 @@ func main() {
 	}
 
 	deployService := deploy.NewDeployService(kubernetesService)
-	if err != nil {
-		panic(err)
-	}
 
 	clerk.SetKey(cfg.Server.ClerkApiKey)
 
