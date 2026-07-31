@@ -42,8 +42,7 @@ spec:
     name: internal-ca-issuer
     kind: ClusterIssuer
   dnsNames:
-    - "*.tysoncloud.tysonjenkins.dev"
-    - "tc.tysonjenkins.dev"
+    - "*.tysonjenkins.dev"
   privateKey:
     algorithm: ECDSA
     size: 256
