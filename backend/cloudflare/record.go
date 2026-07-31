@@ -2,12 +2,14 @@ package cloudflare
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/cloudflare/cloudflare-go/v7"
 	"github.com/cloudflare/cloudflare-go/v7/dns"
 )
 
 func (c *CloudflareService) CreateRecord(ctx context.Context, hostname string) error {
-	name := hostname + c.baseDomain
+	name := fmt.Sprintf("%s.%s", hostname, c.baseDomain)
 	_, err := c.cli.DNS.Records.New(ctx, dns.RecordNewParams{
 		ZoneID: cloudflare.String(c.zoneID),
 		Body: dns.CNAMERecordParam{
@@ -25,7 +27,7 @@ func (c *CloudflareService) CreateRecord(ctx context.Context, hostname string) e
 }
 
 func (c *CloudflareService) DeleteRecord(ctx context.Context, hostname string) error {
-	name := hostname + c.baseDomain
+	name := fmt.Sprintf("%s.%s", hostname, c.baseDomain)
 	res, err := c.cli.DNS.Records.List(ctx, dns.RecordListParams{
 		ZoneID: cloudflare.String(c.zoneID),
 	})
