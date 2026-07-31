@@ -56,7 +56,7 @@ func Load() (Config, error) {
 			ZoneID:     getStringOrDie("CLOUDFLARE_ZONE_ID"),
 			TunnelID:   getStringOrDie("CLOUDFLARE_TUNNEL_ID"),
 			ApiToken:   getStringOrDie("CLOUDFLARE_API_TOKEN"),
-			BaseDomain: getString("CLOUDFLARE_BASE_DOMAIN", "tysoncloud.tysonjenkins.dev"),
+			BaseDomain: getString("CLOUDFLARE_BASE_DOMAIN", "tysonjenkins.dev"),
 		},
 		KubeConfig: getStringOrDie("KUBECONFIG"),
 	}, nil

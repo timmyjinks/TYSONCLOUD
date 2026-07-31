@@ -21,7 +21,7 @@ func (c *CloudflareService) GetRoutes(ctx context.Context) ([]zero_trust.TunnelC
 }
 
 func (c *CloudflareService) CreateRoute(ctx context.Context, subdomain string) error {
-	hostname := fmt.Sprintf("%s.%s", subdomain, c.baseDomain)
+	hostname := fmt.Sprintf("%s.tysoncloud.%s", subdomain, c.baseDomain)
 	service := fmt.Sprintf("https://%s", hostname)
 
 	res, err := c.cli.ZeroTrust.Tunnels.Cloudflared.Configurations.Get(ctx, c.tunnelID, zero_trust.TunnelCloudflaredConfigurationGetParams{
@@ -51,7 +51,7 @@ func (c *CloudflareService) CreateRoute(ctx context.Context, subdomain string) e
 }
 
 func (c *CloudflareService) DeleteRoute(ctx context.Context, subdomain string) error {
-	url := fmt.Sprintf("%s.%s", subdomain, c.baseDomain)
+	url := fmt.Sprintf("%s.tysoncloud.%s", subdomain, c.baseDomain)
 	res, err := c.cli.ZeroTrust.Tunnels.Cloudflared.Configurations.Get(ctx, c.tunnelID, zero_trust.TunnelCloudflaredConfigurationGetParams{
 		AccountID: cloudflare.String(c.accountID),
 	})
