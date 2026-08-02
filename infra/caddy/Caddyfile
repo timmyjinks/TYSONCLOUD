@@ -1,15 +1,5 @@
-{
-    email {env.CF_EMAIL}
-    acme_dns cloudflare {env.CF_API_TOKEN}
-}
-
-http://tc.tysonjenkins.dev, http://*.tysoncloud.tysonjenkins.dev {
-    redir https://{host}{uri} permanent
-}
-
-
-tc.tysonjenkins.dev, *.tysoncloud.tysonjenkins.dev {
-    reverse_proxy https://192.168.0.220:443 {
+http://tc.tysonjenkins.dev, http://*.tysoncloud.tysonjenkins.dev, http://*.tysonjenkins.dev {
+    reverse_proxy https://192.168.0.220 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
@@ -20,19 +10,15 @@ tc.tysonjenkins.dev, *.tysoncloud.tysonjenkins.dev {
             tls_insecure_skip_verify
             tls_server_name {host}
         }
+
+        @upstream_5xx status 5xx
+        handle_response @upstream_5xx {
+            error {rp.status_code} "upstream returned {rp.status_code}"
+        }
     }
-
-    encode gzip
-
-    log {
-        output file /var/log/caddy/tc.tysonjenkins.dev.log
-        format json
-    }
-
-   handle_errors 5xx {
-     root * /var/www/errors
-     rewrite * /5xx.html
-     file_server
+    handle_errors 5xx {
+      root * /var/www/errors
+      rewrite * /5xx.html
+      file_server
     }
 }
-
