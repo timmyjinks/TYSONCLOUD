@@ -1,0 +1,67 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: tysoncloud-frontend
+  namespace: tc-system
+spec:
+  parentRefs:
+    - name: tysoncloud-gateway
+      namespace: tc-system
+  hostnames:
+    - "tc.tysonjenkins.dev"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: tysoncloud-frontend
+          port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tysoncloud-frontend
+  namespace: tc-system
+  labels:
+    app: tysoncloud-frontend
+spec:
+  selector:
+    app: tysoncloud-frontend
+  ports:
+    - protocol: "TCP"
+      port: 80
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tysoncloud-frontend
+  labels:
+    app: tysoncloud-frontend
+  namespace: tc-system
+spec:
+  selector:
+    matchLabels:
+      app: tysoncloud-frontend
+  template:
+    metadata:
+      labels:
+        app: tysoncloud-frontend
+    spec:
+      containers:
+        - name: tysoncloud-frontend
+          image: timmijinks/tysoncloud-frontend
+          ports:
+            - containerPort: 3000
+          env:
+            - name: VITE_CLERK_PUBLISHABLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: VITE_CLERK_PUBLISHABLE_KEY
+                  name: tysoncloud-frontend
+            - name: VITE_API_URL
+              valueFrom:
+                secretKeyRef:
+                  key: VITE_API_URL
+                  name: tysoncloud-frontend
