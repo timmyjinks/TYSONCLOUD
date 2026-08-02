@@ -44,7 +44,7 @@ func Load() (Config, error) {
 	return Config{
 		Server: Server{
 			Addr:           getString("ADDR", ":8080"),
-			AllowedOrigins: getString("ALLOWED_ORIGINS", "https://status.tysonjenkins.dev,https://tysoncloud.tysonjenkins.dev,https://tysoncloud-test.tysonjenkins.dev,http://localhost:3000"),
+			AllowedOrigins: getString("ALLOWED_ORIGINS", "https://status.tysonjenkins.dev,https://tysoncloud.tysonjenkins.dev,https://tysoncloud-test.tysonjenkins.dev,http://localhost:3000,http://tc.tysonjenkins.dev"),
 			ClerkApiKey:    getStringOrDie("CLERK_API_KEY"),
 		},
 		Supabase: Supabase{
@@ -58,7 +58,7 @@ func Load() (Config, error) {
 			ApiToken:   getStringOrDie("CLOUDFLARE_API_TOKEN"),
 			BaseDomain: getString("CLOUDFLARE_BASE_DOMAIN", "tysonjenkins.dev"),
 		},
-		KubeConfig: getStringOrDie("KUBECONFIG"),
+		KubeConfig: getString("KUBECONFIG", "~/.kube/config"),
 	}, nil
 }
 
