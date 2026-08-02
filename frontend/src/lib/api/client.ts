@@ -1,6 +1,16 @@
 import type { ApiError } from "./types";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "";
+declare global {
+  interface Window {
+    __ENV__?: Record<string, string>;
+  }
+}
+
+// window.__ENV__ is written by env.js at container start (see Dockerfile
+// CMD) from the pod's actual env — e.g. a k8s secret. import.meta.env is
+// baked in at build time, so it's only used as a fallback for local dev
+// (`pnpm dev`), where there's no container writing env.js.
+const API_URL = window.__ENV__?.VITE_API_URL ?? import.meta.env.VITE_API_URL ?? "";
 
 /**
  * Reads the Clerk session token off the global `window.Clerk` instance.
