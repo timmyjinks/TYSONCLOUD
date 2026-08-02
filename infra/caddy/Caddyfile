@@ -1,4 +1,4 @@
-http://tc.tysonjenkins.dev, http://*.tysoncloud.tysonjenkins.dev, http://*.tysonjenkins.dev {
+http://tc.tysonjenkins.dev, http://tc-api.tysonjenkins.dev, http://*.tysoncloud.tysonjenkins.dev, http://*.tysonjenkins.dev {
     reverse_proxy https://192.168.0.220 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
