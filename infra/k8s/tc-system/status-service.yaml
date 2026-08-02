@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tysoncloud-status
+  labels:
+    app: tysoncloud-status
+  namespace: tc-system
+spec:
+  selector:
+    matchLabels:
+      app: tysoncloud
+  template:
+    metadata:
+      labels:
+        app: tysoncloud
+    spec:
+      serviceAccountName: tysoncloud-status
+      containers:
+        - name: tysoncloud-status
+          image: timmijinks/tysoncloud-status
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SUPABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: SUPABASE_URL
+                  name: tysoncloud
+            - name: SUPABASE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SUPABASE_API_KEY
+                  name: tysoncloud
