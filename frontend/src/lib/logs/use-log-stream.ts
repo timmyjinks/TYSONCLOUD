@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ingestLogChunk } from "./log-buffer";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "";
+const API_URL = window.__ENV__?.VITE_API_URL ?? import.meta.env.VITE_API_URL ?? "";
 const MAX_LINES = 5000;
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 15000;
+
 
 export type LogStreamStatus = "connecting" | "open" | "closed" | "error";
 
