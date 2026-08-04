@@ -37,10 +37,11 @@ export function useLogStream(projectId: string, serviceId: string, enabled: bool
     stoppedRef.current = false;
     let reconnectTimer: ReturnType<typeof setTimeout>;
 
+
     async function connect() {
       setStatus("connecting");
-      const url =
-        wsUrl(`/projects/${projectId}/services/${serviceId}/logs`)
+      const token = await (window as any).Clerk?.session?.getToken();
+      const url = wsUrl(`/projects/${projectId}/services/${serviceId}/logs?token=${token}`);
       const ws = new WebSocket(url);
       wsRef.current = ws;
 

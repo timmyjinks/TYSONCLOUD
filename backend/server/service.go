@@ -107,13 +107,13 @@ func (app *Application) GetServiceLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie("__session")
-	if err != nil {
+	token := r.URL.Query().Get("token")
+	if token == "" {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	claims, err := clerkjwt.Verify(r.Context(), &clerkjwt.VerifyParams{Token: cookie.Value})
+	claims, err := clerkjwt.Verify(r.Context(), &clerkjwt.VerifyParams{Token: token})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
