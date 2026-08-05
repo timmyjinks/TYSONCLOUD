@@ -56,6 +56,11 @@ spec:
           ports:
             - containerPort: 8080
           env:
+            - name: ALLOWED_ORIGINS
+              valueFrom:
+                secretKeyRef:
+                  key: ALLOWED_ORIGINS
+                  name: tysoncloud-backend
             - name: CLERK_API_KEY
               valueFrom:
                 secretKeyRef:
