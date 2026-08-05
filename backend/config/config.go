@@ -44,7 +44,7 @@ func Load() (Config, error) {
 	return Config{
 		Server: Server{
 			Addr:           getString("ADDR", ":8080"),
-			AllowedOrigins: getString("ALLOWED_ORIGINS", "https://status.tysonjenkins.dev,https://tysoncloud.tysonjenkins.dev,https://tysoncloud-test.tysonjenkins.dev,http://localhost:3000,http://tc.tysonjenkins.dev"),
+			AllowedOrigins: getString("ALLOWED_ORIGINS", "http://localhost:3000"),
 			ClerkApiKey:    getStringOrDie("CLERK_API_KEY"),
 		},
 		Supabase: Supabase{
