@@ -1,0 +1,103 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: tysoncloud-backend-dev
+  namespace: tc-system
+spec:
+  parentRefs:
+    - name: tysoncloud-gateway
+      namespace: tc-system
+  hostnames:
+    - "tc-api.tysonjenkins.test"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: tysoncloud-backend-dev
+          port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tysoncloud-backend-dev
+  namespace: tc-system
+  labels:
+    app: tysoncloud-backend-dev
+spec:
+  selector:
+    app: tysoncloud-backend-dev
+  ports:
+    - protocol: "TCP"
+      port: 80
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tysoncloud-backend-dev
+  labels:
+    app: tysoncloud-backend-dev
+  namespace: tc-system
+spec:
+  selector:
+    matchLabels:
+      app: tysoncloud-backend-dev
+  template:
+    metadata:
+      labels:
+        app: tysoncloud-backend-dev
+    spec:
+      serviceAccountName: tysoncloud-backend
+      containers:
+        - name: tysoncloud-backend-dev
+          image: timmijinks/tysoncloud-backend
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ALLOWED_ORIGINS
+              valueFrom:
+                secretKeyRef:
+                  key: ALLOWED_ORIGINS
+                  name: tysoncloud-backend-dev
+            - name: CLERK_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: CLERK_API_KEY
+                  name: tysoncloud-backend-dev
+            - name: CLOUDFLARE_BASE_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  key: CLOUDFLARE_BASE_DOMAIN
+                  name: tysoncloud-backend-dev
+            - name: SUPABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: SUPABASE_URL
+                  name: tysoncloud-backend-dev
+            - name: SUPABASE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SUPABASE_API_KEY
+                  name: tysoncloud-backend-dev
+            - name: CLOUDFLARE_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: CLOUDFLARE_API_TOKEN
+                  name: tysoncloud-backend-dev
+            - name: CLOUDFLARE_TUNNEL_ID
+              valueFrom:
+                secretKeyRef:
+                  key: CLOUDFLARE_TUNNEL_ID
+                  name: tysoncloud-backend-dev
+            - name: CLOUDFLARE_ACCOUNT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: CLOUDFLARE_ACCOUNT_ID
+                  name: tysoncloud-backend-dev
+            - name: CLOUDFLARE_ZONE_ID
+              valueFrom:
+                secretKeyRef:
+                  key: CLOUDFLARE_ZONE_ID
+                  name: tysoncloud-backend-dev
