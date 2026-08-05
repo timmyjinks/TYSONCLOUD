@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"time"
 )
 
@@ -93,7 +92,3 @@ type ProjectCreateRequest struct {
 type ProjectUpdateRequest struct {
 	Name *string `json:"name,omitempty"`
 }
-
-var emptyName error = errors.New("name was empty")
-var emptyImage error = errors.New("image was empty")
-var invalidEnv error = errors.New("env was not valid KEY=VALUE lines")

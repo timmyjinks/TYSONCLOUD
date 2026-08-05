@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/clerk/clerk-sdk-go/v2"
@@ -11,29 +10,22 @@ import (
 	"github.com/timmyjinks/tysoncloud/store"
 )
 
-var invalidDatabaseId error = errors.New("database with id not found")
-var invalidPort error = errors.New("no port found for engine")
-var invalidEngine error = errors.New("no engine found")
-var invalidStorageGB error = errors.New("no storage amount was specified")
-
 func (app *Application) GetDatabase(w http.ResponseWriter, r *http.Request) {
-	dataseId := mux.Vars(r)["database_id"]
-	if dataseId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+	databaseId := mux.Vars(r)["database_id"]
+	if databaseId == "" {
+		writeError(w, http.StatusBadRequest, "A database ID is required.", nil)
 		return
 	}
 
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusBadRequest)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
 		return
 	}
 
-	userId := claims.Subject
-
-	database, err := app.Supabase.GetDatabase(dataseId, userId)
+	database, err := app.Supabase.GetDatabase(databaseId, claims.Subject)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusNotFound, "We couldn't find that database.", err)
 		return
 	}
 
@@ -42,7 +34,7 @@ func (app *Application) GetDatabase(w http.ResponseWriter, r *http.Request) {
 		Name:      database.ResourceName + "-app",
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Couldn't load the database's connection details.", err)
 		return
 	}
 
@@ -58,7 +50,7 @@ func (app *Application) GetDatabase(w http.ResponseWriter, r *http.Request) {
 		Env:            env,
 		CreatedAt:      database.CreatedAt,
 	}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, msgServerError, err)
 		return
 	}
 }
@@ -66,27 +58,25 @@ func (app *Application) GetDatabase(w http.ResponseWriter, r *http.Request) {
 func (app *Application) GetDatabases(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 	if projectId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
 		return
 	}
 
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusBadRequest)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
 		return
 	}
 
-	userId := claims.Subject
-
-	services, err := app.Supabase.GetDatabases(projectId, userId)
+	databases, err := app.Supabase.GetDatabases(projectId, claims.Subject)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Couldn't load the project's databases. Please try again.", err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(ToDatabasesResponse(services)); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := json.NewEncoder(w).Encode(ToDatabasesResponse(databases)); err != nil {
+		writeError(w, http.StatusInternalServerError, msgServerError, err)
 		return
 	}
 }
@@ -94,40 +84,44 @@ func (app *Application) GetDatabases(w http.ResponseWriter, r *http.Request) {
 func (app *Application) CreateDatabase(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 
-	var service DatabaseCreateRequest
-	err := json.NewDecoder(r.Body).Decode(&service)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	port, err := getPort(service.Engine)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusBadRequest)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
+		return
+	}
+
+	var database DatabaseCreateRequest
+	if err := json.NewDecoder(r.Body).Decode(&database); err != nil {
+		writeError(w, http.StatusBadRequest, "That database request wasn't valid.", err)
+		return
+	}
+
+	if database.Name == "" {
+		writeError(w, http.StatusBadRequest, "Database name is required.", nil)
+		return
+	}
+
+	port, err := getPort(database.Engine)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "That database engine isn't supported.", err)
 		return
 	}
 
 	userId := claims.Subject
 
-	res, err := app.Supabase.CreateDatabase(userId, projectId, service.Name, service.Engine, port, service.StorageGB)
+	res, err := app.Supabase.CreateDatabase(userId, projectId, database.Name, database.Engine, port, database.StorageGB)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Couldn't create the database. Please try again.", err)
 		return
 	}
 
 	if err := app.Deploy.CreateDatabase(r.Context(), deploy.Database{
 		Namespace: "proj-" + projectId,
 		Name:      res.ResourceName,
-		Engine:    service.Engine,
-		StorageGB: service.StorageGB,
+		Engine:    database.Engine,
+		StorageGB: database.StorageGB,
 	}); err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		writeError(w, http.StatusInternalServerError, "The database record was created, but we couldn't provision it. Please try again or contact support.", err)
 		return
 	}
 
@@ -137,49 +131,46 @@ func (app *Application) CreateDatabase(w http.ResponseWriter, r *http.Request) {
 func (app *Application) UpdateDatabase(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 	if projectId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
 		return
 	}
 
 	databaseId := mux.Vars(r)["database_id"]
 	if databaseId == "" {
-		http.Error(w, invalidDatabaseId.Error(), http.StatusBadRequest)
-		return
-	}
-
-	var service DatabaseUpdateRequest
-	err := json.NewDecoder(r.Body).Decode(&service)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A database ID is required.", nil)
 		return
 	}
 
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusBadRequest)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
+		return
+	}
+
+	var database DatabaseUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&database); err != nil {
+		writeError(w, http.StatusBadRequest, "That database request wasn't valid.", err)
+		return
+	}
+
+	if database.Name == nil || *database.Name == "" {
+		writeError(w, http.StatusBadRequest, "Database name is required.", nil)
+		return
+	}
+	if database.Engine == nil || *database.Engine == "" {
+		writeError(w, http.StatusBadRequest, "A database engine is required.", nil)
+		return
+	}
+	if database.StorageGB == nil {
+		writeError(w, http.StatusBadRequest, "A storage amount is required.", nil)
 		return
 	}
 
 	userId := claims.Subject
 
-	if service.Name == nil {
-		http.Error(w, emptyName.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if service.Engine == nil {
-		http.Error(w, invalidEngine.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if service.StorageGB == nil {
-		http.Error(w, invalidStorageGB.Error(), http.StatusBadRequest)
-		return
-	}
-
-	res, err := app.Supabase.UpdateDatabase(databaseId, userId, *service.Name, *service.StorageGB)
+	res, err := app.Supabase.UpdateDatabase(databaseId, userId, *database.Name, *database.StorageGB)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Couldn't save the database. Please try again.", err)
 		return
 	}
 
@@ -187,37 +178,34 @@ func (app *Application) UpdateDatabase(w http.ResponseWriter, r *http.Request) {
 		Namespace: "proj-" + projectId,
 		Name:      res.ResourceName,
 		Engine:    res.Engine,
-		StorageGB: *service.StorageGB,
+		StorageGB: *database.StorageGB,
 	}); err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		writeError(w, http.StatusInternalServerError, "The database record was updated, but we couldn't apply the change. Please try again or contact support.", err)
 		return
 	}
-
 }
 
 func (app *Application) DeleteDatabase(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 	if projectId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
 		return
 	}
 
 	databaseId := mux.Vars(r)["database_id"]
 	if databaseId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A database ID is required.", nil)
 		return
 	}
 
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusBadRequest)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
 		return
 	}
 
-	userId := claims.Subject
-
-	if err := app.Supabase.DeleteDatabase(databaseId, userId); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := app.Supabase.DeleteDatabase(databaseId, claims.Subject); err != nil {
+		writeError(w, http.StatusInternalServerError, "Couldn't delete the database. Please try again.", err)
 		return
 	}
 
@@ -226,7 +214,7 @@ func (app *Application) DeleteDatabase(w http.ResponseWriter, r *http.Request) {
 		Name:      "db-" + databaseId,
 		Engine:    "postgres",
 	}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "The database record was deleted, but its infrastructure couldn't be cleaned up. Please contact support.", err)
 		return
 	}
 

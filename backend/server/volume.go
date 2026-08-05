@@ -12,19 +12,19 @@ import (
 func (app *Application) GetVolume(w http.ResponseWriter, r *http.Request) {
 	serviceId := mux.Vars(r)["service_id"]
 	if serviceId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A service ID is required.", nil)
 		return
 	}
 
 	volume, err := app.Supabase.GetVolume(serviceId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		writeError(w, http.StatusNotFound, "This service doesn't have a volume attached.", err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(VolumeResponse{Id: volume.Id, ServiceId: volume.ServiceId, MountPath: volume.MountPath, StorageGB: volume.StorageGB}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, msgServerError, err)
 		return
 	}
 }
@@ -32,33 +32,41 @@ func (app *Application) GetVolume(w http.ResponseWriter, r *http.Request) {
 func (app *Application) CreateVolume(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 	if projectId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
 		return
 	}
 
 	serviceId := mux.Vars(r)["service_id"]
 	if serviceId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
-		return
-	}
-
-	var service VolumeCreateRequest
-	err := json.NewDecoder(r.Body).Decode(&service)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A service ID is required.", nil)
 		return
 	}
 
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusBadRequest)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
+		return
+	}
+
+	var volume VolumeCreateRequest
+	if err := json.NewDecoder(r.Body).Decode(&volume); err != nil {
+		writeError(w, http.StatusBadRequest, "That volume request wasn't valid.", err)
+		return
+	}
+
+	if volume.MountPath == "" {
+		writeError(w, http.StatusBadRequest, "A mount path is required.", nil)
+		return
+	}
+	if volume.StorageGB <= 0 {
+		writeError(w, http.StatusBadRequest, "Storage size must be greater than zero.", nil)
 		return
 	}
 
 	userId := claims.Subject
 
-	if _, err := app.Supabase.CreateVolume(serviceId, userId, service.MountPath, service.StorageGB); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if _, err := app.Supabase.CreateVolume(serviceId, userId, volume.MountPath, volume.StorageGB); err != nil {
+		writeError(w, http.StatusInternalServerError, "Couldn't attach the volume. Please try again.", err)
 		return
 	}
 
@@ -66,10 +74,10 @@ func (app *Application) CreateVolume(w http.ResponseWriter, r *http.Request) {
 		Namespace: "proj-" + projectId,
 		Name:      "svc-" + serviceId,
 	}, deploy.Volume{
-		MountPath: service.MountPath,
-		StorageGB: service.StorageGB,
+		MountPath: volume.MountPath,
+		StorageGB: volume.StorageGB,
 	}); err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		writeError(w, http.StatusInternalServerError, "The volume record was created, but we couldn't attach it. Please try again or contact support.", err)
 		return
 	}
 
@@ -79,26 +87,24 @@ func (app *Application) CreateVolume(w http.ResponseWriter, r *http.Request) {
 func (app *Application) DeleteVolume(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 	if projectId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
 		return
 	}
 
 	serviceId := mux.Vars(r)["service_id"]
 	if serviceId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A service ID is required.", nil)
 		return
 	}
 
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusBadRequest)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
 		return
 	}
 
-	userId := claims.Subject
-
-	if err := app.Supabase.DeleteVolume(serviceId, userId); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := app.Supabase.DeleteVolume(serviceId, claims.Subject); err != nil {
+		writeError(w, http.StatusInternalServerError, "Couldn't detach the volume. Please try again.", err)
 		return
 	}
 
@@ -106,7 +112,7 @@ func (app *Application) DeleteVolume(w http.ResponseWriter, r *http.Request) {
 		Namespace: "proj-" + projectId,
 		Name:      "svc-" + serviceId,
 	}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "The volume record was removed, but it couldn't be detached from the running service. Please contact support.", err)
 		return
 	}
 

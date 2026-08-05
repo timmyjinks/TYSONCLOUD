@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"errors"
 	"log/slog"
 	"net/http"
 
@@ -11,32 +10,28 @@ import (
 	"github.com/timmyjinks/tysoncloud/store"
 )
 
-var invalidProjectId error = errors.New("project with id not found")
-
 func (app *Application) GetProject(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 	if projectId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
 		return
 	}
 
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
 		return
 	}
 
-	userId := claims.Subject
-
-	project, err := app.Supabase.GetProject(projectId, userId)
+	project, err := app.Supabase.GetProject(projectId, claims.Subject)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusNotFound, "We couldn't find that project.", err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(ProjectResponse{Id: project.Id, Name: project.Name}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, msgServerError, err)
 		return
 	}
 }
@@ -44,21 +39,19 @@ func (app *Application) GetProject(w http.ResponseWriter, r *http.Request) {
 func (app *Application) GetProjects(w http.ResponseWriter, r *http.Request) {
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
 		return
 	}
 
-	userId := claims.Subject
-
-	projects, err := app.Supabase.GetProjects(userId)
+	projects, err := app.Supabase.GetProjects(claims.Subject)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Couldn't load your projects. Please try again.", err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(ToProjectsResponse(projects)); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, msgServerError, err)
 		return
 	}
 }
@@ -66,27 +59,29 @@ func (app *Application) GetProjects(w http.ResponseWriter, r *http.Request) {
 func (app *Application) CreateProject(w http.ResponseWriter, r *http.Request) {
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusBadRequest)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
 		return
 	}
-
-	userId := claims.Subject
 
 	var project ProjectCreateRequest
-	err := json.NewDecoder(r.Body).Decode(&project)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&project); err != nil {
+		writeError(w, http.StatusBadRequest, "That project request wasn't valid.", err)
 		return
 	}
 
-	res, err := app.Supabase.CreateProject(userId, project.Name)
+	if project.Name == "" {
+		writeError(w, http.StatusBadRequest, "Project name is required.", nil)
+		return
+	}
+
+	res, err := app.Supabase.CreateProject(claims.Subject, project.Name)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Couldn't create the project. Please try again.", err)
 		return
 	}
 
 	if err := app.Deploy.CreateProject(r.Context(), res.Namespace); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "The project was created, but we couldn't finish setting up its infrastructure. Please try again or contact support.", err)
 		return
 	}
 
@@ -96,59 +91,57 @@ func (app *Application) CreateProject(w http.ResponseWriter, r *http.Request) {
 func (app *Application) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 	if projectId == "" {
-		http.Error(w, invalidProjectId.Error(), http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
 		return
 	}
 
 	var project ProjectUpdateRequest
-	err := json.NewDecoder(r.Body).Decode(&project)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&project); err != nil {
+		writeError(w, http.StatusBadRequest, "That project request wasn't valid.", err)
 		return
 	}
 
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
 		return
 	}
 
-	userId := claims.Subject
-
-	if project.Name == nil {
-		http.Error(w, emptyName.Error(), http.StatusBadRequest)
+	if project.Name == nil || *project.Name == "" {
+		writeError(w, http.StatusBadRequest, "Project name is required.", nil)
 		return
 	}
 
-	if err := app.Supabase.UpdateProject(projectId, userId, *project.Name); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := app.Supabase.UpdateProject(projectId, claims.Subject, *project.Name); err != nil {
+		writeError(w, http.StatusInternalServerError, "Couldn't save the project name. Please try again.", err)
 		return
 	}
-
 }
 
 func (app *Application) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 	if projectId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
 		return
 	}
 
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
 		return
 	}
 
-	userId := claims.Subject
-
-	if err := app.Supabase.DeleteProject(userId, projectId); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := app.Supabase.DeleteProject(claims.Subject, projectId); err != nil {
+		writeError(w, http.StatusInternalServerError, "Couldn't delete the project. Please try again.", err)
 		return
 	}
 
+	// Namespace cleanup failing here doesn't change the fact that the
+	// project record is gone from the user's perspective — log it for
+	// ops to clean up orphaned infra rather than surfacing a confusing
+	// "deleted, but also failed" message to the user.
 	if err := app.Deploy.DeleteProject(r.Context(), "proj-"+projectId); err != nil {
-		slog.Error(err.Error())
+		slog.Error("failed to clean up project namespace", "project_id", projectId, "err", err)
 	}
 
 	w.WriteHeader(204)

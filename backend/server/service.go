@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"log/slog"
 	"net/http"
 
@@ -16,26 +15,22 @@ import (
 	"github.com/timmyjinks/tysoncloud/util"
 )
 
-var invalidServiceId error = errors.New("service with id not found")
-
 func (app *Application) GetService(w http.ResponseWriter, r *http.Request) {
 	serviceId := mux.Vars(r)["service_id"]
 	if serviceId == "" {
-		http.Error(w, "service with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A service ID is required.", nil)
 		return
 	}
 
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusBadRequest)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
 		return
 	}
 
-	userId := claims.Subject
-
-	service, err := app.Supabase.GetService(serviceId, userId)
+	service, err := app.Supabase.GetService(serviceId, claims.Subject)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusNotFound, "We couldn't find that service.", err)
 		return
 	}
 
@@ -44,7 +39,7 @@ func (app *Application) GetService(w http.ResponseWriter, r *http.Request) {
 		Name:      service.ResourceName,
 	})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Couldn't load the service's environment variables.", err)
 		return
 	}
 
@@ -61,7 +56,7 @@ func (app *Application) GetService(w http.ResponseWriter, r *http.Request) {
 		Env:            env,
 		CreatedAt:      service.CreatedAt,
 	}); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, msgServerError, err)
 		return
 	}
 }
@@ -69,27 +64,25 @@ func (app *Application) GetService(w http.ResponseWriter, r *http.Request) {
 func (app *Application) GetServices(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 	if projectId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
 		return
 	}
 
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusBadRequest)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
 		return
 	}
 
-	userId := claims.Subject
-
-	services, err := app.Supabase.GetServices(projectId, userId)
+	services, err := app.Supabase.GetServices(projectId, claims.Subject)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Couldn't load the project's services. Please try again.", err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(ToServicesResponse(services)); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, msgServerError, err)
 		return
 	}
 }
@@ -97,36 +90,37 @@ func (app *Application) GetServices(w http.ResponseWriter, r *http.Request) {
 func (app *Application) GetServiceLogs(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 	if projectId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
 		return
 	}
 
 	serviceId := mux.Vars(r)["service_id"]
 	if serviceId == "" {
-		http.Error(w, "service with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A service ID is required.", nil)
 		return
 	}
 
-	token := r.URL.Query().Get("token")
-	if token == "" {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	claims, err := clerkjwt.Verify(r.Context(), &clerkjwt.VerifyParams{Token: token})
+	cookie, err := r.Cookie("__session")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, err)
 		return
 	}
 
-	userId := claims.Subject
-
-	service, err := app.Supabase.GetService(serviceId, userId)
+	claims, err := clerkjwt.Verify(r.Context(), &clerkjwt.VerifyParams{Token: cookie.Value})
 	if err != nil {
-		http.Error(w, "service not found", http.StatusNotFound)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, err)
 		return
 	}
 
+	service, err := app.Supabase.GetService(serviceId, claims.Subject)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "We couldn't find that service.", err)
+		return
+	}
+
+	// A websocket upgrade has already committed the response by the time
+	// it can fail, so there's no JSON error body possible past this
+	// point — just close the connection.
 	allowedOrigins := parseAllowedOrigins(app.Config.Server.AllowedOrigins)
 	upgrader := websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -139,7 +133,7 @@ func (app *Application) GetServiceLogs(w http.ResponseWriter, r *http.Request) {
 	}
 	ws, err := upgrader.Upgrade(w, r, http.Header{})
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error("log stream upgrade failed", "err", err)
 		return
 	}
 	defer ws.Close()
@@ -150,12 +144,11 @@ func (app *Application) GetServiceLogs(w http.ResponseWriter, r *http.Request) {
 	lines := make(chan string)
 	go func() {
 		defer close(lines)
-		err := app.Deploy.GetServiceLogs(ctx, deploy.Service{
+		if err := app.Deploy.GetServiceLogs(ctx, deploy.Service{
 			Namespace: "proj-" + projectId,
 			Name:      service.ResourceName,
-		}, lines)
-		if err != nil {
-			slog.Error(err.Error())
+		}, lines); err != nil {
+			slog.Error("log stream failed", "service_id", serviceId, "err", err)
 		}
 	}()
 
@@ -171,21 +164,28 @@ func (app *Application) GetServiceLogs(w http.ResponseWriter, r *http.Request) {
 func (app *Application) CreateService(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 
-	var service ServiceCreateRequest
-	err := json.NewDecoder(r.Body).Decode(&service)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if ok, err := util.ValidateEnv(service.Env); err != nil || !ok {
-		http.Error(w, invalidEnv.Error(), http.StatusBadRequest)
-		return
-	}
-
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusBadRequest)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
+		return
+	}
+
+	var service ServiceCreateRequest
+	if err := json.NewDecoder(r.Body).Decode(&service); err != nil {
+		writeError(w, http.StatusBadRequest, "That service request wasn't valid.", err)
+		return
+	}
+
+	if service.Name == "" {
+		writeError(w, http.StatusBadRequest, "Service name is required.", nil)
+		return
+	}
+	if service.Image == "" {
+		writeError(w, http.StatusBadRequest, "A Docker image is required.", nil)
+		return
+	}
+	if ok, err := util.ValidateEnv(service.Env); err != nil || !ok {
+		writeError(w, http.StatusBadRequest, "Environment variables must be one KEY=value pair per line.", err)
 		return
 	}
 
@@ -193,7 +193,7 @@ func (app *Application) CreateService(w http.ResponseWriter, r *http.Request) {
 
 	res, err := app.Supabase.CreateService(userId, projectId, service.Name, service.Image, service.Port)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Couldn't create the service. Please try again.", err)
 		return
 	}
 
@@ -205,26 +205,25 @@ func (app *Application) CreateService(w http.ResponseWriter, r *http.Request) {
 		Image:     service.Image,
 		Port:      service.Port,
 	}); err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		if _, err := app.Supabase.UpdateServiceStatus(res.Id, userId, "failed"); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		if _, statusErr := app.Supabase.UpdateServiceStatus(res.Id, userId, "failed"); statusErr != nil {
+			slog.Error("failed to mark service failed after deploy error", "service_id", res.Id, "err", statusErr)
 		}
+		writeError(w, http.StatusInternalServerError, "Couldn't deploy the service. Please try again.", err)
 		return
 	}
 
 	if err := app.Cloudflare.CreateRecord(r.Context(), "tc-"+res.Id); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "The service deployed, but we couldn't set up its domain. Please try again or contact support.", err)
 		return
 	}
 
 	if err := app.Cloudflare.CreateRoute(r.Context(), "tc-"+res.Id); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "The service deployed, but we couldn't finish routing its domain. Please try again or contact support.", err)
 		return
 	}
 
 	if _, err := app.Supabase.UpdateServiceStatus(res.Id, userId, "running"); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "The service deployed, but its status couldn't be updated. Refresh to check its current state.", err)
 		return
 	}
 
@@ -234,58 +233,55 @@ func (app *Application) CreateService(w http.ResponseWriter, r *http.Request) {
 func (app *Application) UpdateService(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 	if projectId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
 		return
 	}
 
 	serviceId := mux.Vars(r)["service_id"]
 	if serviceId == "" {
-		http.Error(w, invalidServiceId.Error(), http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A service ID is required.", nil)
+		return
+	}
+
+	claims, ok := clerk.SessionClaimsFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
 		return
 	}
 
 	var service ServiceUpdateRequest
-	err := json.NewDecoder(r.Body).Decode(&service)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&service); err != nil {
+		writeError(w, http.StatusBadRequest, "That service request wasn't valid.", err)
 		return
 	}
 
 	var env string
 	if service.Env != nil {
 		if ok, err := util.ValidateEnv(*service.Env); err != nil || !ok {
-			http.Error(w, invalidEnv.Error(), http.StatusBadRequest)
+			writeError(w, http.StatusBadRequest, "Environment variables must be one KEY=value pair per line.", err)
 			return
 		}
 		env = *service.Env
 	}
 
-	claims, ok := clerk.SessionClaimsFromContext(r.Context())
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusBadRequest)
+	if service.Name == nil || *service.Name == "" {
+		writeError(w, http.StatusBadRequest, "Service name is required.", nil)
+		return
+	}
+	if service.Image == nil || *service.Image == "" {
+		writeError(w, http.StatusBadRequest, "A Docker image is required.", nil)
+		return
+	}
+	if service.Port == nil {
+		writeError(w, http.StatusBadRequest, "A port is required.", nil)
 		return
 	}
 
 	userId := claims.Subject
 
-	if service.Name == nil {
-		http.Error(w, emptyName.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if service.Image == nil {
-		http.Error(w, emptyImage.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if service.Port == nil {
-		http.Error(w, emptyImage.Error(), http.StatusBadRequest)
-		return
-	}
-
 	res, err := app.Supabase.UpdateService(serviceId, userId, *service.Name, *service.Image, *service.Port)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Couldn't save the service. Please try again.", err)
 		return
 	}
 
@@ -297,16 +293,15 @@ func (app *Application) UpdateService(w http.ResponseWriter, r *http.Request) {
 		Image:     *service.Image,
 		Port:      *service.Port,
 	}); err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		if _, err := app.Supabase.UpdateServiceStatus(res.Id, userId, "failed"); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		if _, statusErr := app.Supabase.UpdateServiceStatus(res.Id, userId, "failed"); statusErr != nil {
+			slog.Error("failed to mark service failed after deploy error", "service_id", res.Id, "err", statusErr)
 		}
+		writeError(w, http.StatusInternalServerError, "Couldn't redeploy the service with your changes. Please try again.", err)
 		return
 	}
 
 	if _, err := app.Supabase.UpdateServiceStatus(res.Id, userId, "running"); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "The service redeployed, but its status couldn't be updated. Refresh to check its current state.", err)
 		return
 	}
 }
@@ -314,44 +309,45 @@ func (app *Application) UpdateService(w http.ResponseWriter, r *http.Request) {
 func (app *Application) DeleteService(w http.ResponseWriter, r *http.Request) {
 	projectId := mux.Vars(r)["project_id"]
 	if projectId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
 		return
 	}
 
 	serviceId := mux.Vars(r)["service_id"]
 	if serviceId == "" {
-		http.Error(w, "project with id not found", http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "A service ID is required.", nil)
 		return
 	}
 
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusBadRequest)
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
 		return
 	}
 
-	userId := claims.Subject
-
-	if err := app.Supabase.DeleteService(serviceId, userId); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := app.Supabase.DeleteService(serviceId, claims.Subject); err != nil {
+		writeError(w, http.StatusInternalServerError, "Couldn't delete the service. Please try again.", err)
 		return
 	}
 
+	// The DB record is gone at this point regardless of what happens
+	// below — log infra cleanup failures for ops rather than blocking
+	// or confusing the user with a partial-failure response. (Previously
+	// this branch returned with NO response written at all on a k8s
+	// error, silently leaving the request hanging as an empty 200.)
 	if err := app.Deploy.DeleteService(r.Context(), deploy.Service{
 		Namespace: "proj-" + projectId,
 		Name:      "svc-" + serviceId,
 	}); err != nil {
-		return
+		slog.Error("failed to clean up service infrastructure", "service_id", serviceId, "err", err)
 	}
 
 	if err := app.Cloudflare.DeleteRecord(r.Context(), "tc-"+serviceId); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		slog.Error("failed to clean up service DNS record", "service_id", serviceId, "err", err)
 	}
 
 	if err := app.Cloudflare.DeleteRoute(r.Context(), "tc-"+serviceId); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		slog.Error("failed to clean up service route", "service_id", serviceId, "err", err)
 	}
 
 	w.WriteHeader(204)
