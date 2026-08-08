@@ -83,6 +83,7 @@ function ProjectConfigPage() {
         }}
       >
         <Textarea
+          id="config"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           spellCheck={false}
