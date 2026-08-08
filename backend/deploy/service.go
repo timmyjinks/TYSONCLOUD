@@ -42,33 +42,11 @@ func (d *DeployService) CreateService(ctx context.Context, service Service) erro
 
 func (d *DeployService) BatchCreateServices(ctx context.Context, services []Service) error {
 	for _, service := range services {
-		if err := d.svc.CreateService(ctx, ServiceToResource(service)); err != nil {
-			return err
-		}
-
-		if len(service.Env) != 0 {
-			if err := d.svc.CreateSecret(ctx, ServiceToResource(service)); err != nil {
-				return err
-			}
-		} else {
-			if err := d.svc.DeleteSecret(ctx, ServiceToResource(service)); err != nil && !apierrors.IsNotFound(err) {
-				return err
-			}
-		}
-
-		if err := d.svc.CreateDeployment(ctx, ServiceToResource(service)); err != nil {
-			return err
-		}
-
-		if err := d.svc.CreateHPA(ctx, ServiceToResource(service)); err != nil {
-			return err
-		}
-
-		if err := d.svc.CreateHTTPRoute(ctx, ServiceToResource(service)); err != nil {
+		err := d.CreateService(ctx, service)
+		if err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 

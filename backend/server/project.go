@@ -193,6 +193,7 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 	for _, database := range config.Databases {
 		port, err := getPort(database.Engine)
 		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error(), err)
 			return
 		}
 
@@ -218,14 +219,17 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			app.Deploy.AttachVolume(r.Context(), deploy.Service{
+			err := app.Deploy.AttachVolume(r.Context(), deploy.Service{
 				Namespace: "proj-" + projectId,
 				Name:      serviceTables[i].ResourceName,
 			}, deploy.Volume{
 				MountPath: service.Volume.MountPath,
 				StorageGB: int32(service.Volume.StorageGB),
 			})
-
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "The volume record was created, but we couldn't attach it. Please try again or contact support.", err)
+				return
+			}
 		}
 	}
 
@@ -266,8 +270,8 @@ func ValidateToml(config Config) error {
 		if service.Image == "" {
 			return emptyImage
 		}
-		if service.Port == 0 {
-			return errors.New("empty port")
+		if service.Port < 1 {
+			return errors.New("invalid or non existent port")
 		}
 	}
 
@@ -278,8 +282,8 @@ func ValidateToml(config Config) error {
 		if database.Engine == "" {
 			return emptyImage
 		}
-		if database.StorageGB == 0 {
-			return errors.New("empty storage_gb")
+		if database.StorageGB < 0 {
+			return errors.New("invalid or non existent storage_gb")
 		}
 	}
 
