@@ -84,6 +84,9 @@ func (app *Application) CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := app.Deploy.CreateProject(r.Context(), res.Namespace); err != nil {
+		if delErr := app.Supabase.DeleteProject(claims.Subject, res.Id); delErr != nil {
+			slog.Error("failed to clean up project after infrastructure setup failed", "project_id", res.Id, "err", delErr)
+		}
 		writeError(w, http.StatusInternalServerError, "The project was created, but we couldn't finish setting up its infrastructure. Please try again or contact support.", err)
 		return
 	}
@@ -179,6 +182,14 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rb := newConfigRollback(projectId, userId)
+	success := false
+	defer func() {
+		if !success {
+			app.rollbackProjectConfig(rb)
+		}
+	}()
+
 	var serviceTables []store.ServicesTable
 	for _, service := range config.Services {
 		res, err := app.Supabase.CreateService(userId, projectId, service.Name, service.Image, int32(service.Port))
@@ -188,6 +199,7 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 		}
 		serviceTables = append(serviceTables, res)
 	}
+	rb.serviceTables = serviceTables
 
 	var databaseTables []store.DatabasesTable
 	for _, database := range config.Databases {
@@ -204,51 +216,67 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 		}
 		databaseTables = append(databaseTables, res)
 	}
+	rb.databaseTables = databaseTables
 
 	services, databases := ToProjectData(serviceTables, databaseTables)
 
-	if err := app.Deploy.BatchCreateServices(r.Context(), services); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	for i, service := range services {
+		if err := app.Deploy.CreateService(r.Context(), service); err != nil {
+			writeError(w, http.StatusInternalServerError, "Couldn't deploy the project's services. Please try again or contact support.", err)
+			return
+		}
+		rb.deployedServices[i] = struct{}{}
 	}
 
 	for i, service := range config.Services {
-		if service.Volume != nil {
-			if _, err := app.Supabase.CreateVolume(serviceTables[i].Id, userId, service.Volume.MountPath, int32(service.Volume.StorageGB)); err != nil {
-				writeError(w, http.StatusInternalServerError, "Couldn't attach the volume. Please try again.", err)
-				return
-			}
-
-			err := app.Deploy.AttachVolume(r.Context(), deploy.Service{
-				Namespace: "proj-" + projectId,
-				Name:      serviceTables[i].ResourceName,
-			}, deploy.Volume{
-				MountPath: service.Volume.MountPath,
-				StorageGB: int32(service.Volume.StorageGB),
-			})
-			if err != nil {
-				writeError(w, http.StatusInternalServerError, "The volume record was created, but we couldn't attach it. Please try again or contact support.", err)
-				return
-			}
+		if service.Volume == nil {
+			continue
 		}
+
+		if _, err := app.Supabase.CreateVolume(serviceTables[i].Id, userId, service.Volume.MountPath, int32(service.Volume.StorageGB)); err != nil {
+			writeError(w, http.StatusInternalServerError, "Couldn't attach the volume. Please try again.", err)
+			return
+		}
+		rb.volumesCreated[i] = struct{}{}
+
+		err := app.Deploy.AttachVolume(r.Context(), deploy.Service{
+			Namespace: "proj-" + projectId,
+			Name:      serviceTables[i].ResourceName,
+		}, deploy.Volume{
+			MountPath: service.Volume.MountPath,
+			StorageGB: int32(service.Volume.StorageGB),
+		})
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "The volume record was created, but we couldn't attach it. Please try again or contact support.", err)
+			return
+		}
+		rb.volumesAttached[i] = struct{}{}
 	}
 
-	if err := app.Deploy.BatchCreateDatabases(r.Context(), databases); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	for j, database := range databases {
+		if err := app.Deploy.CreateDatabase(r.Context(), database); err != nil {
+			writeError(w, http.StatusInternalServerError, "Couldn't provision the project's databases. Please try again or contact support.", err)
+			return
+		}
+		rb.deployedDatabases[j] = struct{}{}
 	}
 
-	for _, service := range serviceTables {
+	for i, service := range serviceTables {
 		if err := app.Cloudflare.CreateRecord(r.Context(), "tc-"+service.Id); err != nil {
 			writeError(w, http.StatusInternalServerError, "The service deployed, but we couldn't set up its domain. Please try again or contact support.", err)
 			return
 		}
+		rb.cfRecords[i] = struct{}{}
 
 		if err := app.Cloudflare.CreateRoute(r.Context(), "tc-"+service.Id); err != nil {
 			writeError(w, http.StatusInternalServerError, "The service deployed, but we couldn't finish routing its domain. Please try again or contact support.", err)
 			return
 		}
+		rb.cfRoutes[i] = struct{}{}
 	}
+
+	success = true
+	w.WriteHeader(http.StatusCreated)
 }
 
 func ToProjectsResponse(projectsTable []store.ProjectsTable) []ProjectResponse {

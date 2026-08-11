@@ -40,16 +40,6 @@ func (d *DeployService) CreateService(ctx context.Context, service Service) erro
 	return nil
 }
 
-func (d *DeployService) BatchCreateServices(ctx context.Context, services []Service) error {
-	for _, service := range services {
-		err := d.CreateService(ctx, service)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (d *DeployService) GetServiceEnv(ctx context.Context, service Service) (map[string]string, error) {
 	return d.svc.GetSecret(ctx, ServiceToResource(service))
 }

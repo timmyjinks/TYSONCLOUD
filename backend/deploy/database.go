@@ -14,16 +14,6 @@ func (d *DeployService) DeleteDatabaseEnv(ctx context.Context, database Database
 	})
 }
 
-func (d *DeployService) BatchCreateDatabases(ctx context.Context, databases []Database) error {
-	for _, database := range databases {
-		err := d.CreateDatabase(ctx, database)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (d *DeployService) CreateDatabase(ctx context.Context, database Database) error {
 	switch database.Engine {
 	case "postgres":
