@@ -190,18 +190,16 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	var serviceTables []store.ServicesTable
 	for _, service := range config.Services {
 		res, err := app.Supabase.CreateService(userId, projectId, service.Name, service.Image, int32(service.Port))
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "Couldn't create the service. Please try again.", err)
 			return
 		}
-		serviceTables = append(serviceTables, res)
+		rb.serviceTables = append(rb.serviceTables, res)
 	}
-	rb.serviceTables = serviceTables
+	serviceTables := rb.serviceTables
 
-	var databaseTables []store.DatabasesTable
 	for _, database := range config.Databases {
 		port, err := getPort(database.Engine)
 		if err != nil {
@@ -214,9 +212,9 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusInternalServerError, "Couldn't create the service. Please try again.", err)
 			return
 		}
-		databaseTables = append(databaseTables, res)
+		rb.databaseTables = append(rb.databaseTables, res)
 	}
-	rb.databaseTables = databaseTables
+	databaseTables := rb.databaseTables
 
 	services, databases := ToProjectData(serviceTables, databaseTables)
 
