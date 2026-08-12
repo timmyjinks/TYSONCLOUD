@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useDatabase, useDeleteDatabase } from "@/lib/api/databases";
+import { getErrorMessage } from "@/lib/api/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { ErrorBanner } from "@/components/error-banner";
 
 export const Route = createFileRoute("/projects/$projectId/databases/$databaseId/")({
   component: DatabaseDetail,
@@ -12,9 +14,21 @@ export const Route = createFileRoute("/projects/$projectId/databases/$databaseId
 function DatabaseDetail() {
   const { projectId, databaseId } = Route.useParams();
   const navigate = useNavigate();
-  const { data: database, isLoading } = useDatabase(databaseId);
+  const { data: database, isLoading, error, refetch } = useDatabase(databaseId);
   const deleteDatabase = useDeleteDatabase(projectId);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  if (error) {
+    return (
+      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <ErrorBanner
+          message={getErrorMessage(error)}
+          onRetry={() => refetch()}
+          retryLabel="Retry"
+        />
+      </main>
+    );
+  }
 
   if (isLoading || !database) {
     return (
@@ -106,7 +120,7 @@ function DatabaseDetail() {
         resourceName={database.name}
         resourceLabel="database"
         pending={deleteDatabase.isPending}
-        error={deleteDatabase.error?.message}
+        error={deleteDatabase.error ? getErrorMessage(deleteDatabase.error) : undefined}
         onConfirm={() =>
           deleteDatabase.mutate(database.id, {
             onSuccess: () => navigate({ to: "/projects/$projectId", params: { projectId } }),

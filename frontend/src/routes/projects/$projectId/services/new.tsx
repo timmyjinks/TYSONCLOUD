@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCreateService } from "@/lib/api/services";
+import { getErrorMessage } from "@/lib/api/client";
+import { ErrorBanner } from "@/components/error-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -93,7 +95,7 @@ function NewServicePage() {
         </div>
 
         {createService.error && (
-          <p className="text-sm text-[var(--color-bad)]">{createService.error.message}</p>
+          <ErrorBanner message={getErrorMessage(createService.error)} />
         )}
 
         <div className="flex gap-3 border-t border-[var(--color-border)] pt-5">

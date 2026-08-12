@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useDeleteProject, useProjects } from "@/lib/api/projects";
+import { getErrorMessage } from "@/lib/api/client";
 import { ProjectRow } from "@/components/project-row";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { ErrorBanner } from "@/components/error-banner";
 import { Button } from "@/components/ui/button";
 import type { Project } from "@/lib/api/types";
 
@@ -11,7 +13,7 @@ export const Route = createFileRoute("/dashboard/")({
 });
 
 function DashboardIndex() {
-  const { data: projects, isLoading, error } = useProjects();
+  const { data: projects, isLoading, error, refetch } = useProjects();
   const deleteProject = useDeleteProject();
   const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
 
@@ -34,9 +36,12 @@ function DashboardIndex() {
       )}
 
       {error && (
-        <p className="text-sm text-[var(--color-bad)]">
-          Couldn't load projects. Try refreshing.
-        </p>
+        <ErrorBanner
+          className="mb-4"
+          message={getErrorMessage(error)}
+          onRetry={() => refetch()}
+          retryLabel="Retry"
+        />
       )}
 
       {projects && projects.length === 0 && (
@@ -71,7 +76,7 @@ function DashboardIndex() {
         resourceName={pendingDelete?.name ?? ""}
         resourceLabel="project"
         pending={deleteProject.isPending}
-        error={deleteProject.error?.message}
+        error={deleteProject.error ? getErrorMessage(deleteProject.error) : undefined}
         onConfirm={() => {
           if (!pendingDelete) return;
           deleteProject.mutate(pendingDelete.id, {

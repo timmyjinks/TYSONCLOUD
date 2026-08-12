@@ -46,7 +46,11 @@ export function LogViewer({
       >
         {lines.length === 0 ? (
           <p className="text-[var(--color-text-faint)]">
-            {status === "connecting" ? "connecting to log stream…" : "no output yet"}
+            {status === "connecting"
+              ? "connecting to log stream…"
+              : status === "closed" || status === "error"
+                ? "couldn't reach the log stream — retrying…"
+                : "no output yet"}
           </p>
         ) : (
           lines.map((line, i) => (
