@@ -2,7 +2,6 @@ package store
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/supabase-community/postgrest-go"
@@ -84,7 +83,7 @@ func (s *SupabaseStore) CreateService(userId, projectId, name, image string, por
 
 	var pgErr PostgrestError
 	if err := json.Unmarshal([]byte(result), &pgErr); err == nil && pgErr.Message != "" {
-		return ServicesTable{}, fmt.Errorf("create_service failed: %s", pgErr.Message)
+		return ServicesTable{}, rpcError("create_service", pgErr)
 	}
 
 	return res, nil
@@ -106,7 +105,7 @@ func (s *SupabaseStore) UpdateService(id, userId, name, image string, port int32
 
 	var pgErr PostgrestError
 	if err := json.Unmarshal([]byte(result), &pgErr); err == nil && pgErr.Message != "" {
-		return ServicesTable{}, fmt.Errorf("update_service failed: %s", pgErr.Message)
+		return ServicesTable{}, rpcError("update_service", pgErr)
 	}
 
 	return res, nil
@@ -126,7 +125,7 @@ func (s *SupabaseStore) UpdateServiceStatus(id, userId, status string) (Services
 
 	var pgErr PostgrestError
 	if err := json.Unmarshal([]byte(result), &pgErr); err == nil && pgErr.Message != "" {
-		return ServicesTable{}, fmt.Errorf("update_service_status failed: %s", pgErr.Message)
+		return ServicesTable{}, rpcError("update_service_status", pgErr)
 	}
 
 	return res, nil
@@ -140,7 +139,7 @@ func (s *SupabaseStore) DeleteService(id, userId string) error {
 
 	var pgErr PostgrestError
 	if err := json.Unmarshal([]byte(result), &pgErr); err == nil && pgErr.Message != "" {
-		return fmt.Errorf("delete_service failed: %s", pgErr.Message)
+		return rpcError("delete_service", pgErr)
 	}
 
 	return nil

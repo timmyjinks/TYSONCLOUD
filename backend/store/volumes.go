@@ -2,7 +2,6 @@ package store
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 )
 
@@ -43,7 +42,7 @@ func (s *SupabaseStore) CreateVolume(serviceId, userId, mountPath string, storag
 
 	var pgErr PostgrestError
 	if err := json.Unmarshal([]byte(result), &pgErr); err == nil && pgErr.Message != "" {
-		return VolumesTable{}, fmt.Errorf("create_volume failed: %s", pgErr.Message)
+		return VolumesTable{}, rpcError("create_volume", pgErr)
 	}
 
 	return res, nil
@@ -57,7 +56,7 @@ func (s *SupabaseStore) DeleteVolume(serviceId, userId string) error {
 
 	var pgErr PostgrestError
 	if err := json.Unmarshal([]byte(result), &pgErr); err == nil && pgErr.Message != "" {
-		return fmt.Errorf("delete_volume failed: %s", pgErr.Message)
+		return rpcError("delete_volume", pgErr)
 	}
 
 	return nil

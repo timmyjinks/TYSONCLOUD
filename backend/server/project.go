@@ -2,9 +2,12 @@ package server
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/clerk/clerk-sdk-go/v2"
@@ -160,7 +163,7 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "That config request wasn't valid.", err)
 		return
 	}
 	claims, ok := clerk.SessionClaimsFromContext(r.Context())
@@ -173,12 +176,12 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 	var config Config
 
 	if _, err := toml.Decode(data.Content, &config); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeIssuesError(w, http.StatusBadRequest, "There's a problem with the TOML config.", []Issue{tomlParseIssue(err)}, err)
 		return
 	}
 
-	if err := ValidateToml(config); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if issues := ValidateToml(config); len(issues) > 0 {
+		writeIssuesError(w, http.StatusBadRequest, "The config has some problems.", issues, nil)
 		return
 	}
 
@@ -288,32 +291,54 @@ func ToProjectsResponse(projectsTable []store.ProjectsTable) []ProjectResponse {
 	return projects
 }
 
-func ValidateToml(config Config) error {
-	for _, service := range config.Services {
+func ValidateToml(config Config) []Issue {
+	var issues []Issue
+
+	for i, service := range config.Services {
 		if service.Name == "" {
-			return emptyName
+			issues = append(issues, Issue{Message: fmt.Sprintf("Service #%d is missing a name.", i+1)})
 		}
-		if service.Image == "" {
-			return emptyImage
+		if service.Name != "" && service.Image == "" {
+			issues = append(issues, Issue{Message: fmt.Sprintf("Service %q is missing a Docker image.", service.Name)})
 		}
-		if service.Port < 1 {
-			return errors.New("invalid or non existent port")
+		if service.Name != "" && service.Port < 1 {
+			issues = append(issues, Issue{Message: fmt.Sprintf("Service %q has an invalid port (must be 1 or greater).", service.Name)})
 		}
 	}
 
-	for _, database := range config.Databases {
+	for i, database := range config.Databases {
 		if database.Name == "" {
-			return emptyName
+			issues = append(issues, Issue{Message: fmt.Sprintf("Database #%d is missing a name.", i+1)})
 		}
-		if database.Engine == "" {
-			return emptyImage
+		if database.Name != "" && database.Engine == "" {
+			issues = append(issues, Issue{Message: fmt.Sprintf("Database %q is missing an engine.", database.Name)})
 		}
-		if database.StorageGB < 0 {
-			return errors.New("invalid or non existent storage_gb")
+		if database.Name != "" && database.StorageGB < 0 {
+			issues = append(issues, Issue{Message: fmt.Sprintf("Database %q has an invalid storage_gb (must be 0 or greater).", database.Name)})
 		}
 	}
 
-	return nil
+	return issues
+}
+
+var tomlLineRe = regexp.MustCompile(`line (\d+)`)
+
+// tomlParseIssue turns a BurntSushi/toml parse error into an Issue with the
+// offending line number where one can be parsed out.
+func tomlParseIssue(err error) Issue {
+	msg := err.Error()
+	msg = strings.TrimPrefix(msg, "toml: ")
+	if i := strings.IndexByte(msg, '\n'); i >= 0 {
+		msg = msg[:i]
+	}
+
+	issue := Issue{Message: msg}
+	if m := tomlLineRe.FindStringSubmatch(err.Error()); m != nil {
+		if line, parseErr := strconv.Atoi(m[1]); parseErr == nil {
+			issue.Line = line
+		}
+	}
+	return issue
 }
 
 func ToProjectData(services []store.ServicesTable, databases []store.DatabasesTable) ([]deploy.Service, []deploy.Database) {
