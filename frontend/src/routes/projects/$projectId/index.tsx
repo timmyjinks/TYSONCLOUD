@@ -4,9 +4,11 @@ import { Database as DatabaseIcon, FileCode, Pencil, Plus, Server } from "lucide
 import { useProject } from "@/lib/api/projects";
 import { useDeleteService, useServices } from "@/lib/api/services";
 import { useDatabases, useDeleteDatabase } from "@/lib/api/databases";
+import { getErrorMessage } from "@/lib/api/client";
 import { ResourceRow } from "@/components/resource-row";
 import { ResourceStatusBar } from "@/components/resource-status-bar";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { ErrorBanner } from "@/components/error-banner";
 import { Button } from "@/components/ui/button";
 import type { Service, Database } from "@/lib/api/types";
 
@@ -19,8 +21,18 @@ type Resource = { kind: "service"; data: Service } | { kind: "database"; data: D
 function ProjectDetail() {
   const { projectId } = Route.useParams();
   const { data: project } = useProject(projectId);
-  const { data: services, isLoading: servicesLoading } = useServices(projectId);
-  const { data: databases, isLoading: databasesLoading } = useDatabases(projectId);
+  const {
+    data: services,
+    isLoading: servicesLoading,
+    error: servicesError,
+    refetch: refetchServices,
+  } = useServices(projectId);
+  const {
+    data: databases,
+    isLoading: databasesLoading,
+    error: databasesError,
+    refetch: refetchDatabases,
+  } = useDatabases(projectId);
 
   const deleteService = useDeleteService(projectId);
   const deleteDatabase = useDeleteDatabase(projectId);
@@ -90,6 +102,24 @@ function ProjectDetail() {
         <p className="text-sm text-[var(--color-text-faint)]">loading resources…</p>
       )}
 
+      {servicesError && (
+        <ErrorBanner
+          className="mb-4"
+          message={getErrorMessage(servicesError)}
+          onRetry={() => refetchServices()}
+          retryLabel="Retry"
+        />
+      )}
+
+      {databasesError && (
+        <ErrorBanner
+          className="mb-4"
+          message={getErrorMessage(databasesError)}
+          onRetry={() => refetchDatabases()}
+          retryLabel="Retry"
+        />
+      )}
+
       {!isLoading && resources.length === 0 && (
         <div className="rounded-lg border border-dashed border-[var(--color-border-strong)] p-12 text-center text-sm text-[var(--color-text-muted)]">
           Nothing deployed yet — spin up a service or provision a database to get started.
@@ -145,7 +175,7 @@ function ProjectDetail() {
         resourceName={pendingService?.name ?? ""}
         resourceLabel="service"
         pending={deleteService.isPending}
-        error={deleteService.error?.message}
+        error={deleteService.error ? getErrorMessage(deleteService.error) : undefined}
         onConfirm={() => {
           if (!pendingService) return;
           deleteService.mutate(pendingService.id, {
@@ -160,7 +190,7 @@ function ProjectDetail() {
         resourceName={pendingDatabase?.name ?? ""}
         resourceLabel="database"
         pending={deleteDatabase.isPending}
-        error={deleteDatabase.error?.message}
+        error={deleteDatabase.error ? getErrorMessage(deleteDatabase.error) : undefined}
         onConfirm={() => {
           if (!pendingDatabase) return;
           deleteDatabase.mutate(pendingDatabase.id, {

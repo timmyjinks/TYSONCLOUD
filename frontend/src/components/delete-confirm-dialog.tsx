@@ -1,5 +1,6 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { ErrorBanner } from "@/components/error-banner";
 
 type DeleteConfirmDialogProps = {
   open: boolean;
@@ -34,11 +35,7 @@ export function DeleteConfirmDialog({
           ? This can't be undone.
         </p>
 
-        {error && (
-          <div className="mt-4 rounded-md border border-[var(--color-bad)] bg-[var(--color-bad-soft)] p-3">
-            <p className="text-sm text-[var(--color-bad)]">{error}</p>
-          </div>
-        )}
+        {error && <ErrorBanner message={error} className="mt-4" />}
 
         <div className="mt-6 flex justify-end gap-3">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>

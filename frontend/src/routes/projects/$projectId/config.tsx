@@ -5,9 +5,10 @@ import { FileCode } from "lucide-react";
 import { useApplyProjectConfig } from "@/lib/api/project-config";
 import { serviceKeys } from "@/lib/api/services";
 import { databaseKeys } from "@/lib/api/databases";
+import { ApiRequestError, getErrorMessage } from "@/lib/api/client";
+import { ErrorBanner } from "@/components/error-banner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ApiRequestError } from "@/lib/api/client";
 
 export const Route = createFileRoute("/projects/$projectId/config")({
   component: ProjectConfigPage,
@@ -92,8 +93,7 @@ function ProjectConfigPage() {
         />
 
         {applyConfig.error && (
-          <div className="rounded-md border border-[var(--color-bad)] bg-[var(--color-bad-soft)] p-3">
-            <p className="text-sm text-[var(--color-bad)]">{applyConfig.error.message}</p>
+          <ErrorBanner message={getErrorMessage(applyConfig.error)}>
             {issues && issues.length > 0 && (
               <ul className="mt-2 space-y-1 text-xs text-[var(--color-bad)]">
                 {issues.map((issue, i) => (
@@ -104,7 +104,7 @@ function ProjectConfigPage() {
                 ))}
               </ul>
             )}
-          </div>
+          </ErrorBanner>
         )}
 
         <div className="flex items-center gap-3 border-t border-[var(--color-border)] pt-5">

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCreateDatabase } from "@/lib/api/databases";
+import { getErrorMessage } from "@/lib/api/client";
+import { ErrorBanner } from "@/components/error-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,7 +74,7 @@ function NewDatabasePage() {
         </div>
 
         {createDatabase.error && (
-          <p className="text-sm text-[var(--color-bad)]">{createDatabase.error.message}</p>
+          <ErrorBanner message={getErrorMessage(createDatabase.error)} />
         )}
 
         <div className="flex gap-3 border-t border-[var(--color-border)] pt-5">

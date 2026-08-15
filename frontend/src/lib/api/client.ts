@@ -35,33 +35,79 @@ export class ApiRequestError extends Error {
   }
 }
 
+export const NETWORK_ERROR_MESSAGE = "Couldn't reach TYSONCLOUD. Check your connection and try again.";
+
+const STATUS_FALLBACK_MESSAGES: Record<number, string> = {
+  401: "Your session has expired. Please sign in again.",
+  403: "You don't have permission to do that.",
+  404: "We couldn't find what you were looking for.",
+  429: "You're moving a little fast — wait a moment and try again.",
+};
+
+function statusFallbackMessage(status: number): string {
+  if (status >= 500) return "Something went wrong on our end. Please try again.";
+  return STATUS_FALLBACK_MESSAGES[status] ?? "That request didn't work. Please try again.";
+}
+
+const NETWORK_ERROR_MESSAGES = new Set([
+  "Failed to fetch",
+  "NetworkError when attempting to fetch resource.",
+  "Load failed",
+  "The Internet connection appears to be offline.",
+  "Network request failed",
+]);
+
+/** Turns any thrown value into a user-facing error message. */
+export function getErrorMessage(err: unknown): string {
+  if (err instanceof ApiRequestError) return err.message || statusFallbackMessage(err.status);
+  if (err instanceof TypeError) {
+    return NETWORK_ERROR_MESSAGES.has(err.message) ? NETWORK_ERROR_MESSAGE : err.message;
+  }
+  if (err instanceof Error) return err.message || "Something unexpected went wrong. Please try again.";
+  if (typeof err === "string") return err;
+  return "Something unexpected went wrong. Please try again.";
+}
+
 async function request<T>(
   path: string,
   init: RequestInit = {},
 ): Promise<T> {
   const token = await getToken();
 
-  const res = await fetch(`${API_URL}${path}`, {
-    ...init,
-    headers: {
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...init.headers,
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      ...init,
+      headers: {
+        ...(init.body ? { "Content-Type": "application/json" } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...init.headers,
+      },
+    });
+  } catch {
+    throw new ApiRequestError(0, null, NETWORK_ERROR_MESSAGE);
+  }
 
   if (!res.ok) {
+    const contentType = res.headers.get("Content-Type") ?? "";
+    const text = await res.text().catch(() => "");
     let body: ApiError | null = null;
-    try {
-      body = await res.json();
-    } catch {
-      // response wasn't JSON — leave body null
+    let message: string | null = null;
+
+    if (text) {
+      if (contentType.includes("application/json")) {
+        try {
+          body = JSON.parse(text);
+          message = body?.error ?? body?.message ?? null;
+        } catch {
+          body = null;
+        }
+      } else if (contentType.includes("text/plain")) {
+        message = text.trim().slice(0, 300) || null;
+      }
     }
-    throw new ApiRequestError(
-      res.status,
-      body,
-      body?.error ?? body?.message ?? `Request failed (${res.status})`,
-    );
+
+    throw new ApiRequestError(res.status, body, message ?? statusFallbackMessage(res.status));
   }
 
   // Several endpoints (CreateService, CreateProject, CreateDatabase, CreateVolume,

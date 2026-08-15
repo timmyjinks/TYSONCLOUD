@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useDatabase, useUpdateDatabase } from "@/lib/api/databases";
+import { getErrorMessage } from "@/lib/api/client";
+import { ErrorBanner } from "@/components/error-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +14,7 @@ export const Route = createFileRoute("/projects/$projectId/databases/$databaseId
 function EditDatabasePage() {
   const { projectId, databaseId } = Route.useParams();
   const navigate = useNavigate();
-  const { data: database } = useDatabase(databaseId);
+  const { data: database, isLoading, error, refetch } = useDatabase(databaseId);
   const updateDatabase = useUpdateDatabase(projectId, databaseId);
 
   const [name, setName] = useState("");
@@ -23,6 +25,26 @@ function EditDatabasePage() {
     setName(database.name);
     setStorageGB(String(database.storage));
   }, [database]);
+
+  if (error) {
+    return (
+      <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 lg:px-8">
+        <ErrorBanner
+          message={getErrorMessage(error)}
+          onRetry={() => refetch()}
+          retryLabel="Retry"
+        />
+      </main>
+    );
+  }
+
+  if (isLoading || !database) {
+    return (
+      <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-[var(--color-text-faint)]">loading database…</p>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 lg:px-8">
@@ -69,7 +91,7 @@ function EditDatabasePage() {
         </div>
 
         {updateDatabase.error && (
-          <p className="text-sm text-[var(--color-bad)]">{updateDatabase.error.message}</p>
+          <ErrorBanner message={getErrorMessage(updateDatabase.error)} />
         )}
 
         <div className="flex gap-3 border-t border-[var(--color-border)] pt-5">

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useProject, useUpdateProject } from "@/lib/api/projects";
+import { getErrorMessage } from "@/lib/api/client";
+import { ErrorBanner } from "@/components/error-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +14,7 @@ export const Route = createFileRoute("/projects/$projectId/edit")({
 function EditProjectPage() {
   const { projectId } = Route.useParams();
   const navigate = useNavigate();
-  const { data: project } = useProject(projectId);
+  const { data: project, isLoading, error, refetch } = useProject(projectId);
   const updateProject = useUpdateProject(projectId);
 
   const [name, setName] = useState("");
@@ -21,6 +23,26 @@ function EditProjectPage() {
     if (!project) return;
     setName(project.name);
   }, [project]);
+
+  if (error) {
+    return (
+      <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 lg:px-8">
+        <ErrorBanner
+          message={getErrorMessage(error)}
+          onRetry={() => refetch()}
+          retryLabel="Retry"
+        />
+      </main>
+    );
+  }
+
+  if (isLoading || !project) {
+    return (
+      <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-[var(--color-text-faint)]">loading project…</p>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 lg:px-8">
@@ -58,7 +80,7 @@ function EditProjectPage() {
         </div>
 
         {updateProject.error && (
-          <p className="text-sm text-[var(--color-bad)]">{updateProject.error.message}</p>
+          <ErrorBanner message={getErrorMessage(updateProject.error)} />
         )}
 
         <div className="flex gap-3 border-t border-[var(--color-border)] pt-5">

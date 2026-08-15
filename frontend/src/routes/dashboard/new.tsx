@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCreateProject } from "@/lib/api/projects";
+import { getErrorMessage } from "@/lib/api/client";
+import { ErrorBanner } from "@/components/error-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,7 +49,7 @@ function NewProjectPage() {
         </div>
 
         {createProject.error && (
-          <p className="text-sm text-[var(--color-bad)]">{createProject.error.message}</p>
+          <ErrorBanner message={getErrorMessage(createProject.error)} />
         )}
 
         <div className="flex gap-3 border-t border-[var(--color-border)] pt-5">

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useService, useUpdateService } from "@/lib/api/services";
+import { getErrorMessage } from "@/lib/api/client";
+import { ErrorBanner } from "@/components/error-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +15,7 @@ export const Route = createFileRoute("/projects/$projectId/services/$serviceId/e
 function EditServicePage() {
   const { projectId, serviceId } = Route.useParams();
   const navigate = useNavigate();
-  const { data: service } = useService(serviceId);
+  const { data: service, isLoading, error, refetch } = useService(serviceId);
   const updateService = useUpdateService(projectId, serviceId);
 
   const [name, setName] = useState("");
@@ -32,6 +34,26 @@ function EditServicePage() {
         .join("\n"),
     );
   }, [service]);
+
+  if (error) {
+    return (
+      <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 lg:px-8">
+        <ErrorBanner
+          message={getErrorMessage(error)}
+          onRetry={() => refetch()}
+          retryLabel="Retry"
+        />
+      </main>
+    );
+  }
+
+  if (isLoading || !service) {
+    return (
+      <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-[var(--color-text-faint)]">loading service…</p>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-lg px-4 py-8 sm:px-6 lg:px-8">
@@ -105,7 +127,7 @@ function EditServicePage() {
         </div>
 
         {updateService.error && (
-          <p className="text-sm text-[var(--color-bad)]">{updateService.error.message}</p>
+          <ErrorBanner message={getErrorMessage(updateService.error)} />
         )}
 
         <div className="flex gap-3 border-t border-[var(--color-border)] pt-5">

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useDeleteService, useService } from "@/lib/api/services";
 import { useAttachVolume, useDetachVolume, useVolume } from "@/lib/api/volumes";
+import { getErrorMessage } from "@/lib/api/client";
 import { StatusDot } from "@/components/status-dot";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { ServiceLogsDrawer } from "@/components/service-logs-drawer";
+import { ErrorBanner } from "@/components/error-banner";
 
 export const Route = createFileRoute("/projects/$projectId/services/$serviceId/")({
   component: ServiceDetail,
@@ -17,8 +19,12 @@ export const Route = createFileRoute("/projects/$projectId/services/$serviceId/"
 function ServiceDetail() {
   const { projectId, serviceId } = Route.useParams();
   const navigate = useNavigate();
-  const { data: service, isLoading } = useService(serviceId);
-  const { data: volume } = useVolume(serviceId);
+  const { data: service, isLoading, error, refetch } = useService(serviceId);
+  const {
+    data: volume,
+    error: volumeError,
+    refetch: refetchVolume,
+  } = useVolume(serviceId);
   const attachVolume = useAttachVolume(projectId, serviceId);
   const detachVolume = useDetachVolume(projectId, serviceId);
   const deleteService = useDeleteService(projectId);
@@ -27,6 +33,18 @@ function ServiceDetail() {
   const [mountPath, setMountPath] = useState("");
   const [storageGB, setStorageGB] = useState("5");
   const [logsOpen, setLogsOpen] = useState(false);
+
+  if (error) {
+    return (
+      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <ErrorBanner
+          message={getErrorMessage(error)}
+          onRetry={() => refetch()}
+          retryLabel="Retry"
+        />
+      </main>
+    );
+  }
 
   if (isLoading || !service) {
     return (
@@ -114,6 +132,14 @@ function ServiceDetail() {
         <h2 className="mb-4 text-lg font-semibold">Volume</h2>
         <Card>
           <CardContent className="pt-5">
+            {volumeError && (
+              <ErrorBanner
+                className="mb-3"
+                message={getErrorMessage(volumeError)}
+                onRetry={() => refetchVolume()}
+                retryLabel="Retry"
+              />
+            )}
             {volume ? (
               <div className="flex items-center justify-between">
                 <div>
@@ -132,39 +158,47 @@ function ServiceDetail() {
                 </Button>
               </div>
             ) : (
-              <form
-                className="flex flex-wrap items-end gap-3"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  attachVolume.mutate({ mount_path: mountPath, storage_gb: Number(storageGB) });
-                }}
-              >
-                <div className="flex-1 min-w-[160px]">
-                  <Label htmlFor="mount_path">Mount path</Label>
-                  <Input
-                    id="mount_path"
-                    required
-                    value={mountPath}
-                    onChange={(e) => setMountPath(e.target.value)}
-                    placeholder="/app/data"
-                    className="mt-2 font-mono"
-                  />
-                </div>
-                <div className="w-28">
-                  <Label htmlFor="storage_gb">Storage (GB)</Label>
-                  <Input
-                    id="storage_gb"
-                    type="number"
-                    required
-                    value={storageGB}
-                    onChange={(e) => setStorageGB(e.target.value)}
-                    className="mt-2 font-mono"
-                  />
-                </div>
-                <Button type="submit" size="sm" disabled={attachVolume.isPending}>
-                  {attachVolume.isPending ? "Attaching…" : "Attach volume"}
-                </Button>
-              </form>
+              <div>
+                <form
+                  className="flex flex-wrap items-end gap-3"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    attachVolume.mutate({ mount_path: mountPath, storage_gb: Number(storageGB) });
+                  }}
+                >
+                  <div className="flex-1 min-w-[160px]">
+                    <Label htmlFor="mount_path">Mount path</Label>
+                    <Input
+                      id="mount_path"
+                      required
+                      value={mountPath}
+                      onChange={(e) => setMountPath(e.target.value)}
+                      placeholder="/app/data"
+                      className="mt-2 font-mono"
+                    />
+                  </div>
+                  <div className="w-28">
+                    <Label htmlFor="storage_gb">Storage (GB)</Label>
+                    <Input
+                      id="storage_gb"
+                      type="number"
+                      required
+                      value={storageGB}
+                      onChange={(e) => setStorageGB(e.target.value)}
+                      className="mt-2 font-mono"
+                    />
+                  </div>
+                  <Button type="submit" size="sm" disabled={attachVolume.isPending}>
+                    {attachVolume.isPending ? "Attaching…" : "Attach volume"}
+                  </Button>
+                </form>
+                {attachVolume.error && (
+                  <ErrorBanner className="mt-3" message={getErrorMessage(attachVolume.error)} />
+                )}
+              </div>
+            )}
+            {detachVolume.error && (
+              <ErrorBanner className="mt-3" message={getErrorMessage(detachVolume.error)} />
             )}
           </CardContent>
         </Card>
@@ -191,7 +225,7 @@ function ServiceDetail() {
         resourceName={service.name}
         resourceLabel="service"
         pending={deleteService.isPending}
-        error={deleteService.error?.message}
+        error={deleteService.error ? getErrorMessage(deleteService.error) : undefined}
         onConfirm={() =>
           deleteService.mutate(service.id, {
             onSuccess: () => navigate({ to: "/projects/$projectId", params: { projectId } }),

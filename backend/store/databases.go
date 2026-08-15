@@ -2,7 +2,6 @@ package store
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/supabase-community/postgrest-go"
@@ -77,7 +76,7 @@ func (s *SupabaseStore) CreateDatabase(userId, projectId, name, engine string, p
 
 	var pgErr PostgrestError
 	if err := json.Unmarshal([]byte(result), &pgErr); err == nil && pgErr.Message != "" {
-		return DatabasesTable{}, fmt.Errorf("create_service failed: %s", pgErr.Message)
+		return DatabasesTable{}, rpcError("create_database", pgErr)
 	}
 
 	return res, nil
@@ -98,7 +97,7 @@ func (s *SupabaseStore) UpdateDatabase(id, userId, name string, storageGB int32)
 
 	var pgErr PostgrestError
 	if err := json.Unmarshal([]byte(result), &pgErr); err == nil && pgErr.Message != "" {
-		return DatabasesTable{}, fmt.Errorf("update_database failed: %s", pgErr.Message)
+		return DatabasesTable{}, rpcError("update_database", pgErr)
 	}
 
 	return res, nil
@@ -112,7 +111,7 @@ func (s *SupabaseStore) DeleteDatabase(id, userId string) error {
 
 	var pgErr PostgrestError
 	if err := json.Unmarshal([]byte(result), &pgErr); err == nil && pgErr.Message != "" {
-		return fmt.Errorf("delete_service failed: %s", pgErr.Message)
+		return rpcError("delete_database", pgErr)
 	}
 
 	return nil
