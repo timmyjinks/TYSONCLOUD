@@ -9,6 +9,7 @@ spec:
       namespace: tc-system
   hostnames:
     - "tc.tysonjenkins.test"
+    - "tysoncloud.tysonjenkins.test"
   rules:
     - matches:
         - path:
