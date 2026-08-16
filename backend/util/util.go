@@ -2,7 +2,6 @@ package util
 
 import (
 	"iter"
-	"log"
 	"net"
 )
 
@@ -25,13 +24,13 @@ func Enumerate[T any](cookieIndex *int, iterator iter.Seq[T]) iter.Seq2[int, T] 
 	}
 }
 
-func GetLocalIP() string {
+func GetLocalIP() (string, error) {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	defer conn.Close()
 
 	localAddress := conn.LocalAddr().(*net.UDPAddr)
-	return localAddress.String()
+	return localAddress.IP.String(), nil
 }

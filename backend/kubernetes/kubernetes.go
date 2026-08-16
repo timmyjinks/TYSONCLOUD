@@ -27,13 +27,13 @@ func NewKubernetesService(kubeconfigPath string) (*KubernetesService, error) {
 	gatewayClient := gatewayclient.NewForConfigOrDie(config)
 	dynamicClient := dynamic.NewForConfigOrDie(config)
 
-	ip := util.GetLocalIP()
-	if ip == "" {
+	ip, err := util.GetLocalIP()
+	if err != nil {
 		return nil, errors.New("Cluster IP not found")
 	}
 
 	return &KubernetesService{
-		ClusterIP:     ip,
+		ClusterIP:     ip + ":6443",
 		clientset:     clientset,
 		gatewayClient: gatewayClient,
 		dynamicClient: dynamicClient,
