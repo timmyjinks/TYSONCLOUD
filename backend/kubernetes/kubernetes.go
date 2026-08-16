@@ -33,7 +33,7 @@ func NewKubernetesService(kubeconfigPath string) (*KubernetesService, error) {
 	}
 
 	return &KubernetesService{
-		ClusterIP:     ip + ":6443",
+		ClusterIP:     ip,
 		clientset:     clientset,
 		gatewayClient: gatewayClient,
 		dynamicClient: dynamicClient,
