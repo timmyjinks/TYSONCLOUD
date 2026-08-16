@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { ErrorBanner } from "@/components/error-banner";
+import { PageHeader } from "@/components/page-header";
 
 export const Route = createFileRoute("/projects/$projectId/databases/$databaseId/")({
   component: DatabaseDetail,
@@ -32,71 +33,73 @@ function DatabaseDetail() {
 
   if (isLoading || !database) {
     return (
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="text-sm text-[var(--color-text-faint)]">loading database…</p>
+      <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+        <p className="text-base text-[var(--color-text-faint)]">loading database…</p>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
       <Link
         to="/projects/$projectId"
         params={{ projectId }}
-        className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
+        className="text-base text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
       >
         ← Back to project
       </Link>
-      <h1 className="mt-4 mb-8 font-mono text-2xl font-bold">{database.name}</h1>
+      <div className="mt-5">
+        <PageHeader title={database.name} />
+      </div>
 
       <section className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card>
-          <CardContent className="pt-5">
-            <p className="text-sm text-[var(--color-text-faint)]">Database ID</p>
-            <p className="mt-1 font-mono text-sm">{database.id}</p>
+          <CardContent className="pt-6">
+            <p className="text-base text-[var(--color-text-faint)]">Database ID</p>
+            <p className="mt-1.5 font-mono text-base">{database.id}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <p className="text-sm text-[var(--color-text-faint)]">Engine</p>
-            <p className="mt-1 font-mono text-sm capitalize">{database.engine}</p>
+          <CardContent className="pt-6">
+            <p className="text-base text-[var(--color-text-faint)]">Engine</p>
+            <p className="mt-1.5 font-mono text-base capitalize">{database.engine}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <p className="text-sm text-[var(--color-text-faint)]">Internal host</p>
-            <p className="mt-1 font-mono text-sm">{database.internal_domain}</p>
+          <CardContent className="pt-6">
+            <p className="text-base text-[var(--color-text-faint)]">Internal host</p>
+            <p className="mt-1.5 font-mono text-base">{database.internal_domain}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <p className="text-sm text-[var(--color-text-faint)]">Port</p>
-            <p className="mt-1 font-mono text-sm">{database.port}</p>
+          <CardContent className="pt-6">
+            <p className="text-base text-[var(--color-text-faint)]">Port</p>
+            <p className="mt-1.5 font-mono text-base">{database.port}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <p className="text-sm text-[var(--color-text-faint)]">Storage</p>
-            <p className="mt-1 font-mono text-sm">{database.storage} GB</p>
+          <CardContent className="pt-6">
+            <p className="text-base text-[var(--color-text-faint)]">Storage</p>
+            <p className="mt-1.5 font-mono text-base">{database.storage} GB</p>
           </CardContent>
         </Card>
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-4 text-lg font-semibold">Environment variables</h2>
+        <h2 className="mb-4 font-display text-xl font-semibold">Environment variables</h2>
         <Card>
-          <CardContent className="pt-5">
+          <CardContent className="pt-6">
             {Object.keys(database.env ?? {}).length > 0 ? (
               <dl className="space-y-2">
                 {Object.entries(database.env).map(([key, value]) => (
-                  <div key={key} className="break-all font-mono text-sm">
+                  <div key={key} className="break-all font-mono text-base">
                     <dt className="inline text-[var(--color-text)]">{key}</dt>
                     <dd className="inline text-[var(--color-text-faint)]">={value}</dd>
                   </div>
                 ))}
               </dl>
             ) : (
-              <p className="text-sm text-[var(--color-text-faint)]">No environment variables set.</p>
+              <p className="text-base text-[var(--color-text-faint)]">No environment variables set.</p>
             )}
           </CardContent>
         </Card>

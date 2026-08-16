@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { ServiceLogsDrawer } from "@/components/service-logs-drawer";
 import { ErrorBanner } from "@/components/error-banner";
+import { PageHeader } from "@/components/page-header";
 
 export const Route = createFileRoute("/projects/$projectId/services/$serviceId/")({
   component: ServiceDetail,
@@ -48,90 +49,91 @@ function ServiceDetail() {
 
   if (isLoading || !service) {
     return (
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <p className="text-sm text-[var(--color-text-faint)]">loading service…</p>
+      <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+        <p className="text-base text-[var(--color-text-faint)]">loading service…</p>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
       <Link
         to="/projects/$projectId"
         params={{ projectId }}
-        className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
+        className="text-base text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
       >
         ← Back to project
       </Link>
 
-      <div className="mt-4 mb-8 flex items-center gap-4">
-        <h1 className="font-mono text-2xl font-bold">{service.name}</h1>
-        <div className="flex items-center gap-1.5">
-          <StatusDot status={service.status} />
-          <span className="text-sm capitalize text-[var(--color-text-muted)]">
-            {service.status}
-          </span>
-        </div>
+      <div className="mt-5">
+        <PageHeader title={service.name}>
+          <div className="flex items-center gap-2">
+            <StatusDot status={service.status} />
+            <span className="text-base capitalize text-[var(--color-text-muted)]">
+              {service.status}
+            </span>
+          </div>
+        </PageHeader>
       </div>
 
       <section className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card>
-          <CardContent className="pt-5">
-            <p className="text-sm text-[var(--color-text-faint)]">Service ID</p>
-            <p className="mt-1 font-mono text-sm">{service.id}</p>
+          <CardContent className="pt-6">
+            <p className="text-base text-[var(--color-text-faint)]">Service ID</p>
+            <p className="mt-1.5 font-mono text-base">{service.id}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <p className="text-sm text-[var(--color-text-faint)]">Public domain</p>
+          <CardContent className="pt-6">
+            <p className="text-base text-[var(--color-text-faint)]">Public domain</p>
             <a
               href={`https://${service.public_domain}`}
               target="_blank"
               rel="noreferrer"
-              className="mt-1 block font-mono text-sm text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+              className="mt-1.5 block font-mono text-base text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
             >
               {service.public_domain}
             </a>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <p className="text-sm text-[var(--color-text-faint)]">Image</p>
-            <p className="mt-1 font-mono text-sm">{service.image}</p>
+          <CardContent className="pt-6">
+            <p className="text-base text-[var(--color-text-faint)]">Image</p>
+            <p className="mt-1.5 font-mono text-base">{service.image}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-5">
-            <p className="text-sm text-[var(--color-text-faint)]">Port</p>
-            <p className="mt-1 font-mono text-sm">{service.port}</p>
+          <CardContent className="pt-6">
+            <p className="text-base text-[var(--color-text-faint)]">Port</p>
+            <p className="mt-1.5 font-mono text-base">{service.port}</p>
           </CardContent>
         </Card>
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-4 text-lg font-semibold">Environment variables</h2>
+        <h2 className="mb-4 font-display text-xl font-semibold">Environment variables</h2>
         <Card>
-          <CardContent className="pt-5">
+          <CardContent className="pt-6">
             {Object.keys(service.env ?? {}).length > 0 ? (
               <dl className="space-y-2">
                 {Object.entries(service.env).map(([key, value]) => (
-                  <div key={key} className="break-all font-mono text-sm">
+                  <div key={key} className="break-all font-mono text-base">
                     <dt className="inline text-[var(--color-text)]">{key}</dt>
                     <dd className="inline text-[var(--color-text-faint)]">={value}</dd>
                   </div>
                 ))}
               </dl>
             ) : (
-              <p className="text-sm text-[var(--color-text-faint)]">No environment variables set.</p>
+              <p className="text-base text-[var(--color-text-faint)]">No environment variables set.</p>
             )}
           </CardContent>
         </Card>
       </section>
 
       <section className="mb-8">
-        <h2 className="mb-4 text-lg font-semibold">Volume</h2>
+        <h2 className="mb-4 font-display text-xl font-semibold">Volume</h2>
         <Card>
-          <CardContent className="pt-5">
+          <CardContent className="pt-6">
             {volumeError && (
               <ErrorBanner
                 className="mb-3"
@@ -143,8 +145,8 @@ function ServiceDetail() {
             {volume ? (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-mono text-sm">{volume.mount_path}</p>
-                  <p className="mt-1 text-xs text-[var(--color-text-faint)]">
+                  <p className="font-mono text-base">{volume.mount_path}</p>
+                  <p className="mt-1 text-base text-[var(--color-text-faint)]">
                     {volume.storage_gb} GB
                   </p>
                 </div>
@@ -158,7 +160,7 @@ function ServiceDetail() {
                 </Button>
               </div>
             ) : (
-              <div>
+              <>
                 <form
                   className="flex flex-wrap items-end gap-3"
                   onSubmit={(e) => {
@@ -166,7 +168,7 @@ function ServiceDetail() {
                     attachVolume.mutate({ mount_path: mountPath, storage_gb: Number(storageGB) });
                   }}
                 >
-                  <div className="flex-1 min-w-[160px]">
+                  <div className="flex-1 min-w-[180px]">
                     <Label htmlFor="mount_path">Mount path</Label>
                     <Input
                       id="mount_path"
@@ -177,7 +179,7 @@ function ServiceDetail() {
                       className="mt-2 font-mono"
                     />
                   </div>
-                  <div className="w-28">
+                  <div className="w-32">
                     <Label htmlFor="storage_gb">Storage (GB)</Label>
                     <Input
                       id="storage_gb"
@@ -195,7 +197,7 @@ function ServiceDetail() {
                 {attachVolume.error && (
                   <ErrorBanner className="mt-3" message={getErrorMessage(attachVolume.error)} />
                 )}
-              </div>
+              </>
             )}
             {detachVolume.error && (
               <ErrorBanner className="mt-3" message={getErrorMessage(detachVolume.error)} />

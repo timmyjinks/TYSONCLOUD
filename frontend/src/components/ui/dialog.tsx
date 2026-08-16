@@ -11,7 +11,7 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       onClick={(e) => {
         if (e.target === e.currentTarget) onOpenChange(false);
       }}
@@ -25,7 +25,7 @@ export function DialogContent({ className, ...props }: React.HTMLAttributes<HTML
   return (
     <div
       className={cn(
-        "w-full max-w-md rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6",
+        "w-full max-w-lg rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-7",
         className,
       )}
       {...props}

@@ -44,7 +44,7 @@ function InnerApp() {
 function FullPageLoading() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg)]">
-      <p className="font-mono text-sm text-[var(--color-text-faint)]">loading…</p>
+      <p className="font-mono text-base text-[var(--color-text-faint)]">loading…</p>
     </div>
   );
 }
@@ -61,65 +61,75 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       appearance={{
         variables: {
           colorPrimary: "#ff4433",
-          colorBackground: "#111214",
-          colorInputBackground: "#17181b",
-          colorInputText: "#f3f3f5",
-          colorText: "#f3f3f5",
-          colorTextSecondary: "#9a9aa4",
+          colorBackground: "#17140f",
+          colorInputBackground: "#1d1913",
+          colorInputText: "#f4ede1",
+          colorText: "#f4ede1",
+          colorTextSecondary: "#b5ac9d",
           colorDanger: "#ff4433",
-          colorSuccess: "#35d68a",
-          colorWarning: "#f2a93b",
+          colorSuccess: "#a3b98a",
+          colorWarning: "#e8b356",
           borderRadius: "0.375rem",
           fontFamily: "'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif",
         },
         elements: {
           badge: {
-            backgroundColor: "#17181b",
-            color: "#9a9aa4",
-            border: "1px solid #232428",
+            backgroundColor: "#1d1913",
+            color: "#b5ac9d",
+            border: "1px solid #2a261f",
+          },
+          formFieldInput: {
+            backgroundColor: "#1d1913",
+            border: "1px solid #3a352b",
+          },
+          formButtonPrimary: {
+            backgroundColor: "#ff4433",
+            ":hover": {
+              backgroundColor: "#e23a2c",
+            },
           },
           userButtonPopoverCard: {
-            backgroundColor: "#111214",
-            border: "1px solid #232428",
+            backgroundColor: "#17140f",
+            border: "1px solid #2a261f",
           },
           userButtonPopoverActionButton: {
-            color: "#f3f3f5",
+            color: "#f4ede1",
             "&:hover": {
-              backgroundColor: "#1c1d21",
-              color: "#f3f3f5",
+              backgroundColor: "#242019",
+              color: "#f4ede1",
             },
             "&:focus": {
-              color: "#f3f3f5",
+              color: "#f4ede1",
             },
           },
           userButtonPopoverActionButtonText: {
-            color: "#f3f3f5",
+            color: "#f4ede1",
             "&:hover": {
-              color: "#f3f3f5",
+              color: "#f4ede1",
             },
           },
           userButtonPopoverActionButtonIcon: {
-            color: "#9a9aa4",
+            color: "#b5ac9d",
             "&:hover": {
-              color: "#9a9aa4",
+              color: "#b5ac9d",
             },
           },
           userButtonPopoverFooter: {
-            backgroundColor: "#17181b",
+            backgroundColor: "#1d1913",
           },
           userButtonTrigger: {
             "&:hover": {
-              backgroundColor: "#1c1d21",
+              backgroundColor: "#242019",
             },
             "&:focus": {
               boxShadow: "none",
             },
           },
           formFieldInputShowPasswordButton: {
-            color: "#9a9aa4",
+            color: "#b5ac9d",
             "&:hover": {
-              backgroundColor: "#1c1d21",
-              color: "#f3f3f5",
+              backgroundColor: "#242019",
+              color: "#f4ede1",
             },
           },
         },

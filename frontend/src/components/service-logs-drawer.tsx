@@ -64,16 +64,15 @@ export function ServiceLogsDrawer({
         role="dialog"
         aria-label={`${serviceName} logs`}
       >
-        <div className="terminal-strip flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface-2)] px-4 py-3">
-          <div className="flex items-center gap-2 font-mono text-sm">
-            <span className="prompt text-[var(--color-text-faint)]">$</span>
+        <div className="terminal-strip flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface-2)] px-5 py-4">
+          <div className="flex items-center gap-2 font-mono text-base">
             <span className="text-[var(--color-text)]">{serviceName}</span>
             <span className="text-[var(--color-text-faint)]">· logs</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <StatusDot status={status === "open" ? "running" : "other"} />
-              <span className="font-mono text-xs text-[var(--color-text-faint)]">
+              <span className="font-mono text-sm text-[var(--color-text-faint)]">
                 {STATUS_LABEL[status]}
               </span>
             </div>
@@ -82,7 +81,7 @@ export function ServiceLogsDrawer({
               aria-label="Close logs"
               className="text-[var(--color-text-faint)] hover:text-[var(--color-text)]"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>

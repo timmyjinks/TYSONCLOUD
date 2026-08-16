@@ -12,7 +12,7 @@ function SignInStepPage() {
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-4">
       <Link
         to="/"
-        className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
+        className="text-base text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
       >
         ← Back to home
       </Link>

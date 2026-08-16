@@ -24,10 +24,10 @@ export function DeleteConfirmDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <h3 className="text-lg font-semibold text-[var(--color-text)]">
+        <h3 className="font-display text-2xl font-semibold text-[var(--color-text)]">
           Delete {resourceLabel}
         </h3>
-        <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+        <p className="mt-3 text-base text-[var(--color-text-muted)]">
           Are you sure you want to delete{" "}
           <span className="font-mono font-semibold text-[var(--color-text)]">
             {resourceName}
@@ -35,7 +35,7 @@ export function DeleteConfirmDialog({
           ? This can't be undone.
         </p>
 
-        {error && <ErrorBanner message={error} className="mt-4" />}
+{error && <ErrorBanner message={error} className="mt-4" />}
 
         <div className="mt-6 flex justify-end gap-3">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
