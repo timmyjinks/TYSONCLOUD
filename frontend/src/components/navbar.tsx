@@ -3,10 +3,14 @@ import { SignedIn, SignedOut } from "@clerk/clerk-react";
 
 export function Navbar() {
   return (
-    <header className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-      <nav className="flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="font-mono text-lg font-bold tracking-tight text-[var(--color-text)]">
+    <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-bg)]/80 backdrop-blur">
+      <nav
+        className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8"
+        aria-label="Main"
+      >
+        <Link to="/" className="flex items-center gap-2.5">
+          <span className="h-2.5 w-2.5 bg-[var(--color-accent)]" aria-hidden="true" />
+          <span className="font-display text-xl font-semibold tracking-tight text-[var(--color-text)]">
             TYSONCLOUD
           </span>
         </Link>
@@ -14,13 +18,13 @@ export function Navbar() {
           <SignedOut>
             <Link
               to="/sign-in"
-              className="text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)]"
+              className="text-base text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)]"
             >
               Sign in
             </Link>
             <Link
               to="/sign-up"
-              className="rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-white hover:bg-[var(--color-accent-hover)]"
+              className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-base font-medium text-white hover:bg-[var(--color-accent-hover)]"
             >
               Get started
             </Link>
@@ -28,7 +32,7 @@ export function Navbar() {
           <SignedIn>
             <Link
               to="/dashboard"
-              className="rounded-md bg-[var(--color-accent)] px-3 py-1 text-base font-medium text-white hover:bg-[var(--color-accent-hover)]"
+              className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-base font-medium text-white hover:bg-[var(--color-accent-hover)]"
             >
               Dashboard
             </Link>

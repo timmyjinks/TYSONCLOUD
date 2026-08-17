@@ -16,15 +16,22 @@ switched per page:
   service/database cards, status at a glance).
 
 Tokens live in `src/app.css`:
-- Background `#08090b`, surfaces `#111214`/`#17181b`, hairline borders.
-- One brand accent, violet `#6e56cf` — used for interactive state only.
+- Background `#08090b`, surfaces `#111214`/`#17181b`, hairline borders,
+  surface-shift elevation (no heavy shadows), generous calm spacing —
+  Railway-inspired structure.
+- One brand accent, red `#ff4433` — used for interactive state only.
 - Status colors (green/amber/red) reserved strictly for real infra state
   (running/building/failed), never decorative.
-- Type: **JetBrains Mono** for headlines, IDs, ports, domains, env vars —
+- Type: **JetBrains Mono** for headings, IDs, ports, domains, env vars —
   **IBM Plex Sans** for paragraph copy.
 - Signature motif: the "terminal strip" — a monospace prompt-style header on
-  every resource card (`$ svc-web-01`), tying the UI back to the containers
+  resource/data panels (`$ svc-web-01`), tying the UI back to the containers
   it manages.
+
+The landing page now includes SEO sections rendered client-side (features,
+how-it-works, FAQ) plus matching JSON-LD structured data in `index.html`
+(Organization / WebSite / SoftwareApplication graph + FAQPage), so the
+structured data stays in sync with what's visible on the page.
 
 ## Getting started
 

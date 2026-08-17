@@ -1,21 +1,25 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { SignUp } from "@clerk/clerk-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { SignIn } from "@clerk/clerk-react";
 import { safeRedirectTarget } from "@/lib/safe-redirect";
 
-// Same reasoning as sign-in/$.tsx — catches Clerk's sub-steps under
-// /sign-up/* (e.g. /sign-up/verify-email-address, /sign-up/continue).
 export const Route = createFileRoute("/sign-up/$")({
-  component: SignUpStepPage,
+  component: SignInStepPage,
 });
 
-function SignUpStepPage() {
+function SignInStepPage() {
   const { redirect } = Route.useSearch();
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <SignUp
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-4">
+      <Link
+        to="/"
+        className="text-base text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
+      >
+        ← Back to home
+      </Link>
+      <SignIn
         routing="path"
-        path="/sign-up"
-        signInUrl="/sign-in"
+        path="/sign-in"
+        signUpUrl="/sign-up"
         forceRedirectUrl={safeRedirectTarget(redirect)}
       />
     </div>

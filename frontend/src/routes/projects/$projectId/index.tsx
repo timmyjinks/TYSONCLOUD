@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Database as DatabaseIcon, FileCode, Pencil, Plus, Server } from "lucide-react";
 import { useProject } from "@/lib/api/projects";
 import { useDeleteService, useServices } from "@/lib/api/services";
@@ -9,6 +9,7 @@ import { ResourceRow } from "@/components/resource-row";
 import { ResourceStatusBar } from "@/components/resource-status-bar";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { ErrorBanner } from "@/components/error-banner";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import type { Service, Database } from "@/lib/api/types";
 
@@ -20,6 +21,7 @@ type Resource = { kind: "service"; data: Service } | { kind: "database"; data: D
 
 function ProjectDetail() {
   const { projectId } = Route.useParams();
+  const navigate = useNavigate();
   const { data: project } = useProject(projectId);
   const {
     data: services,
@@ -54,44 +56,45 @@ function ProjectDetail() {
   const runningCount = (services ?? []).filter((s) => s.status === "running").length;
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="flex items-center gap-2">
-        <h1 className="font-mono text-3xl font-bold">{project?.name ?? projectId}</h1>
-        <Link
-          to="/projects/$projectId/edit"
-          params={{ projectId }}
-          aria-label="Rename project"
-          className="text-[var(--color-text-faint)] hover:text-[var(--color-accent)]"
-        >
-          <Pencil className="h-4 w-4" />
+    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      <PageHeader
+        title={
+          <span className="inline-flex items-center gap-3">
+            {project?.name ?? projectId}
+            <Link
+              to="/projects/$projectId/edit"
+              params={{ projectId }}
+              aria-label="Rename project"
+              className="text-[var(--color-text-faint)] transition-colors hover:text-[var(--color-accent)]"
+            >
+              <Pencil className="h-5 w-5" />
+            </Link>
+          </span>
+        }
+        description="Everything deployed in this project"
+      >
+        <Link to="/projects/$projectId/config" params={{ projectId }}>
+          <Button variant="outline" size="sm">
+            <FileCode className="h-4 w-4" />
+            Config
+          </Button>
         </Link>
-        <Link
-          to="/projects/$projectId/config"
-          params={{ projectId }}
-          aria-label="Apply project config"
-          className="text-[var(--color-text-faint)] hover:text-[var(--color-accent)]"
-        >
-          <FileCode className="h-4 w-4" />
-        </Link>
-      </div>
-      <p className="mt-1 text-base text-[var(--color-text-muted)]">
-        Everything deployed in this project
-      </p>
+      </PageHeader>
 
-      <div className="mt-8 mb-3 flex items-center justify-between">
-        <h2 className="text-base font-medium text-[var(--color-text-muted)]">
+      <div className="mt-10 mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-medium text-[var(--color-text-muted)]">
           Resources <span className="text-[var(--color-text-faint)]">· {resources.length} total</span>
         </h2>
         <div className="flex items-center gap-2">
           <Link to="/projects/$projectId/databases/new" params={{ projectId }}>
             <Button size="sm" variant="outline">
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-4 w-4" />
               Database
             </Button>
           </Link>
           <Link to="/projects/$projectId/services/new" params={{ projectId }}>
             <Button size="sm">
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-4 w-4" />
               Service
             </Button>
           </Link>
@@ -99,7 +102,7 @@ function ProjectDetail() {
       </div>
 
       {isLoading && (
-        <p className="text-sm text-[var(--color-text-faint)]">loading resources…</p>
+        <p className="text-base text-[var(--color-text-faint)]">loading resources…</p>
       )}
 
       {servicesError && (
@@ -121,19 +124,19 @@ function ProjectDetail() {
       )}
 
       {!isLoading && resources.length === 0 && (
-        <div className="rounded-lg border border-dashed border-[var(--color-border-strong)] p-12 text-center text-sm text-[var(--color-text-muted)]">
+        <div className="rounded-lg border border-dashed border-[var(--color-border-strong)] p-16 text-center text-base text-[var(--color-text-muted)]">
           Nothing deployed yet — spin up a service or provision a database to get started.
         </div>
       )}
 
       {resources.length > 0 && (
         <>
-          <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
             {resources.map((resource) =>
               resource.kind === "service" ? (
                 <ResourceRow
                   key={`svc-${resource.data.id}`}
-                  icon={<Server className="h-3.5 w-3.5" />}
+                  icon={<Server className="h-5 w-5" />}
                   name={resource.data.name}
                   status={resource.data.status}
                   runtime={resource.data.image}
@@ -143,17 +146,35 @@ function ProjectDetail() {
                     resource.data.public_domain ? `https://${resource.data.public_domain}` : undefined
                   }
                   detailHref={`/projects/${projectId}/services/${resource.data.id}`}
+                  onUpdate={() =>
+                    navigate({
+                      to: "/projects/$projectId/services/$serviceId/edit",
+                      params: {
+                        projectId,
+                        serviceId: resource.data.id,
+                      },
+                    })
+                  }
                   onDelete={() => setPendingService(resource.data)}
                 />
               ) : (
                 <ResourceRow
                   key={`db-${resource.data.id}`}
-                  icon={<DatabaseIcon className="h-3.5 w-3.5" />}
+                  icon={<DatabaseIcon className="h-5 w-5" />}
                   name={resource.data.name}
                   runtime={resource.data.engine}
                   size={`${resource.data.storage} GB`}
                   domain={resource.data.internal_domain || "internal"}
                   detailHref={`/projects/${projectId}/databases/${resource.data.id}`}
+                  onUpdate={() =>
+                    navigate({
+                      to: "/projects/$projectId/databases/$databaseId/edit",
+                      params: {
+                        projectId,
+                        databaseId: resource.data.id,
+                      },
+                    })
+                  }
                   onDelete={() => setPendingDatabase(resource.data)}
                 />
               ),

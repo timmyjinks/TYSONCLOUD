@@ -42,7 +42,7 @@ export function LogViewer({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="min-h-0 flex-1 overflow-y-auto bg-[var(--color-bg)] px-4 py-3 font-mono text-xs leading-relaxed text-[var(--color-text-muted)]"
+        className="min-h-0 flex-1 overflow-y-auto bg-[var(--color-bg)] px-5 py-4 font-mono text-sm leading-relaxed text-[var(--color-text-muted)]"
       >
         {lines.length === 0 ? (
           <p className="text-[var(--color-text-faint)]">

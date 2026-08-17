@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { StatusPill } from "@/components/status-pill";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 type ResourceRowProps = {
@@ -16,6 +18,7 @@ type ResourceRowProps = {
   domain: string;
   domainHref?: string;
   detailHref: string;
+  onUpdate: () => void;
   onDelete: () => void;
   className?: string;
 };
@@ -29,38 +32,39 @@ export function ResourceRow({
   domain,
   domainHref,
   detailHref,
+  onUpdate,
   onDelete,
   className,
 }: ResourceRowProps) {
   return (
     <div
       className={cn(
-        "group flex items-center gap-4 border-t border-[var(--color-border)] px-4 py-4 first:border-t-0 hover:bg-[var(--color-surface-hover)]",
+        "group flex items-center gap-5 border-t border-[var(--color-border)] px-5 py-5 first:border-t-0 first:rounded-t-lg last:rounded-b-lg hover:bg-[var(--color-surface-hover)]",
         className,
       )}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-muted)]">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-muted)]">
         {icon}
       </span>
 
       <Link
         to={detailHref}
-        className="w-36 shrink-0 truncate text-base font-medium text-[var(--color-text)]"
+        className="w-44 shrink-0 truncate font-sans text-lg font-medium text-[var(--color-text)] hover:text-[var(--color-accent)]"
       >
         {name}
       </Link>
 
-      <span className="w-20 shrink-0">{status && <StatusPill status={status} />}</span>
+      <span className="w-24 shrink-0">{status && <StatusPill status={status} />}</span>
 
-      <span className="flex-1 truncate font-mono text-sm text-[var(--color-text-faint)]">
+      <span className="flex-1 truncate font-mono text-base text-[var(--color-text-faint)]">
         {runtime}
       </span>
 
-      <span className="w-14 shrink-0 text-right font-mono text-sm text-[var(--color-text-faint)]">
+      <span className="w-16 shrink-0 text-right font-mono text-base text-[var(--color-text-faint)]">
         {size}
       </span>
 
-      <span className="w-44 shrink-0 truncate text-right font-mono text-sm">
+      <span className="w-52 shrink-0 truncate text-right font-mono text-base">
         {domainHref ? (
           <a
             href={domainHref}
@@ -75,13 +79,28 @@ export function ResourceRow({
         )}
       </span>
 
-      <button
-        onClick={onDelete}
-        aria-label={`Delete ${name}`}
-        className="shrink-0 cursor-pointer text-[var(--color-text-faint)] opacity-0 transition-opacity hover:text-[var(--color-bad)] group-hover:opacity-100"
+      <DropdownMenu
+        trigger={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Actions for ${name}`}
+            className="h-9 w-9 shrink-0 text-[var(--color-text-faint)]"
+          >
+            <MoreVertical className="h-5 w-5" />
+          </Button>
+        }
       >
-        <Trash2 className="h-4 w-4" />
-      </button>
+        <DropdownMenuItem onClick={onUpdate}>
+          <Pencil className="h-4 w-4" />
+          Update
+        </DropdownMenuItem>
+        <div className="my-1 h-px bg-[var(--color-border)]" aria-hidden="true" />
+        <DropdownMenuItem destructive onClick={onDelete}>
+          <Trash2 className="h-4 w-4" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenu>
     </div>
   );
 }

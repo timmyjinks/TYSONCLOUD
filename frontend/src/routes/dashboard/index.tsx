@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useDeleteProject, useProjects } from "@/lib/api/projects";
 import { getErrorMessage } from "@/lib/api/client";
 import { ProjectRow } from "@/components/project-row";
@@ -15,24 +15,25 @@ export const Route = createFileRoute("/dashboard/")({
 function DashboardIndex() {
   const { data: projects, isLoading, error, refetch } = useProjects();
   const deleteProject = useDeleteProject();
+  const navigate = useNavigate();
   const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8 flex items-center justify-between">
+    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mb-10 flex items-center justify-between gap-4">
         <div>
-          <h1 className="font-mono text-3xl font-bold">Projects</h1>
-          <p className="text-base text-[var(--color-text-muted)]">
+          <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">Projects</h1>
+          <p className="mt-2 text-lg text-[var(--color-text-muted)]">
             Everything you're running on TYSONCLOUD
           </p>
         </div>
-        <Link to="/dashboard/new">
+        <Link to="/dashboard/new" className="shrink-0">
           <Button>New project</Button>
         </Link>
       </div>
 
       {isLoading && (
-        <p className="text-sm text-[var(--color-text-faint)]">loading projects…</p>
+        <p className="text-base text-[var(--color-text-faint)]">loading projects…</p>
       )}
 
       {error && (
@@ -45,25 +46,26 @@ function DashboardIndex() {
       )}
 
       {projects && projects.length === 0 && (
-        <div className="rounded-lg border border-dashed border-[var(--color-border-strong)] p-12 text-center">
-          <p className="text-[var(--color-text-muted)]">No projects yet.</p>
+        <div className="rounded-lg border border-dashed border-[var(--color-border-strong)] p-16 text-center">
+          <p className="text-lg text-[var(--color-text-muted)]">No projects yet.</p>
           <Link
             to="/dashboard/new"
-            className="mt-2 inline-block text-sm font-mono text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+            className="mt-3 inline-block text-base font-mono text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
           >
-            create your first one →
+            create your first one
           </Link>
         </div>
       )}
 
       {projects && projects.length > 0 && (
-        <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
           {projects.map((project) => (
             <ProjectRow
               key={project.id}
               name={project.name}
               id={project.id}
               href={`/projects/${project.id}`}
+              onUpdate={() => navigate({ to: "/projects/$projectId/edit", params: { projectId: project.id } })}
               onDelete={() => setPendingDelete(project)}
             />
           ))}
