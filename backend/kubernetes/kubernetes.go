@@ -1,9 +1,9 @@
 package kubernetes
 
 import (
-	"context"
+	"errors"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/timmyjinks/tysoncloud/util"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -20,21 +20,17 @@ type KubernetesService struct {
 func NewKubernetesService(kubeconfigPath string) (*KubernetesService, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 
 	clientset := kubernetes.NewForConfigOrDie(config)
 	gatewayClient := gatewayclient.NewForConfigOrDie(config)
 	dynamicClient := dynamic.NewForConfigOrDie(config)
 
-	svc, err := clientset.CoreV1().
-		Services("default").
-		Get(context.Background(), "kubernetes", metav1.GetOptions{})
+	ip, err := util.GetLocalIP()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Cluster IP not found")
 	}
-
-	ip := svc.Spec.ClusterIP
 
 	return &KubernetesService{
 		ClusterIP:     ip,

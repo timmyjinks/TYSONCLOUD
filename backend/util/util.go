@@ -1,6 +1,9 @@
 package util
 
-import "iter"
+import (
+	"iter"
+	"net"
+)
 
 func Unwrap[T comparable](ok T, err error) T {
 	if err != nil {
@@ -19,4 +22,15 @@ func Enumerate[T any](cookieIndex *int, iterator iter.Seq[T]) iter.Seq2[int, T] 
 			*cookieIndex += 1
 		}
 	}
+}
+
+func GetLocalIP() (string, error) {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+
+	localAddress := conn.LocalAddr().(*net.UDPAddr)
+	return localAddress.IP.String(), nil
 }
