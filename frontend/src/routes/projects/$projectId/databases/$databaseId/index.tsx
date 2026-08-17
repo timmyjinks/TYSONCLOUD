@@ -1,12 +1,15 @@
 import { useState } from "react";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useDatabase, useDeleteDatabase } from "@/lib/api/databases";
 import { getErrorMessage } from "@/lib/api/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { ResourceMetaCard } from "@/components/resource-meta-card";
+import { CopyButton } from "@/components/copy-button";
+import { cleanEnvValue, formatEnvLines } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { ErrorBanner } from "@/components/error-banner";
-import { PageHeader } from "@/components/page-header";
 
 export const Route = createFileRoute("/projects/$projectId/databases/$databaseId/")({
   component: DatabaseDetail,
@@ -48,73 +51,84 @@ function DatabaseDetail() {
       >
         ← Back to project
       </Link>
-      <div className="mt-5">
-        <PageHeader title={database.name} />
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] pb-4">
+        <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          {database.name}
+        </h1>
+        <DropdownMenu
+          trigger={
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Database actions"
+              className="h-9 w-9 text-[var(--color-text-muted)]"
+            >
+              <MoreVertical className="h-5 w-5" />
+            </Button>
+          }
+        >
+          <DropdownMenuItem
+            onClick={() =>
+              navigate({
+                to: "/projects/$projectId/databases/$databaseId/edit",
+                params: { projectId, databaseId },
+              })
+            }
+          >
+            <Pencil className="h-4 w-4" />
+            Update
+          </DropdownMenuItem>
+          <div className="my-1 h-px bg-[var(--color-border)]" aria-hidden="true" />
+          <DropdownMenuItem destructive onClick={() => setConfirmingDelete(true)}>
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenu>
       </div>
 
-      <section className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-base text-[var(--color-text-faint)]">Database ID</p>
-            <p className="mt-1.5 font-mono text-base">{database.id}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-base text-[var(--color-text-faint)]">Engine</p>
-            <p className="mt-1.5 font-mono text-base capitalize">{database.engine}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-base text-[var(--color-text-faint)]">Internal host</p>
-            <p className="mt-1.5 font-mono text-base">{database.internal_domain}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-base text-[var(--color-text-faint)]">Port</p>
-            <p className="mt-1.5 font-mono text-base">{database.port}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-base text-[var(--color-text-faint)]">Storage</p>
-            <p className="mt-1.5 font-mono text-base">{database.storage} GB</p>
-          </CardContent>
-        </Card>
-      </section>
+      <div className="mt-6">
+        <ResourceMetaCard
+          meta={[
+            { label: "Database ID", value: database.id, mono: true },
+            { label: "Engine", value: database.engine, mono: true },
+            { label: "Internal host", value: database.internal_domain, mono: true, copyable: true, danger: true },
+            { label: "Port", value: String(database.port), mono: true },
+            { label: "Storage", value: `${database.storage} GB`, mono: true },
+          ]}
+        />
+      </div>
 
-      <section className="mb-8">
-        <h2 className="mb-4 font-display text-xl font-semibold">Environment variables</h2>
-        <Card>
-          <CardContent className="pt-6">
-            {Object.keys(database.env ?? {}).length > 0 ? (
-              <dl className="space-y-2">
-                {Object.entries(database.env).map(([key, value]) => (
-                  <div key={key} className="break-all font-mono text-base">
-                    <dt className="inline text-[var(--color-text)]">{key}</dt>
-                    <dd className="inline text-[var(--color-text-faint)]">={value}</dd>
-                  </div>
-                ))}
-              </dl>
-            ) : (
-              <p className="text-base text-[var(--color-text-faint)]">No environment variables set.</p>
-            )}
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="flex gap-4">
-        <Link
-          to="/projects/$projectId/databases/$databaseId/edit"
-          params={{ projectId, databaseId }}
-        >
-          <Button>Update database</Button>
-        </Link>
-        <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
-          Delete database
-        </Button>
+      <section className="mt-8">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-display text-lg font-semibold text-[var(--color-text)]">
+            Environment variables
+          </h2>
+          {Object.keys(database.env ?? {}).length > 0 && (
+            <CopyButton
+              label="Copy all environment variables"
+              value={formatEnvLines(database.env)}
+            />
+          )}
+        </div>
+        {Object.keys(database.env ?? {}).length > 0 ? (
+          <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
+            {Object.entries(database.env).map(([key, value]) => (
+              <CopyButton
+                key={key}
+                label={`Copy ${key}=${value}`}
+                value={`${key}=${cleanEnvValue(value)}`}
+                className="border-t border-[var(--color-border)] first:border-t-0"
+              >
+                <span className="text-[var(--color-text)]">{key}</span>
+                <span className="text-[var(--color-text-faint)]">={cleanEnvValue(value)}</span>
+              </CopyButton>
+            ))}
+          </div>
+        ) : (
+          <p className="text-base text-[var(--color-text-faint)]">
+            No environment variables set.
+          </p>
+        )}
       </section>
 
       <DeleteConfirmDialog

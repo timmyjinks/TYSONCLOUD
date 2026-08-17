@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Database as DatabaseIcon, FileCode, Pencil, Plus, Server } from "lucide-react";
 import { useProject } from "@/lib/api/projects";
 import { useDeleteService, useServices } from "@/lib/api/services";
@@ -21,6 +21,7 @@ type Resource = { kind: "service"; data: Service } | { kind: "database"; data: D
 
 function ProjectDetail() {
   const { projectId } = Route.useParams();
+  const navigate = useNavigate();
   const { data: project } = useProject(projectId);
   const {
     data: services,
@@ -57,24 +58,26 @@ function ProjectDetail() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
       <PageHeader
-        title={project?.name ?? projectId}
+        title={
+          <span className="inline-flex items-center gap-3">
+            {project?.name ?? projectId}
+            <Link
+              to="/projects/$projectId/edit"
+              params={{ projectId }}
+              aria-label="Rename project"
+              className="text-[var(--color-text-faint)] transition-colors hover:text-[var(--color-accent)]"
+            >
+              <Pencil className="h-5 w-5" />
+            </Link>
+          </span>
+        }
         description="Everything deployed in this project"
       >
-        <Link
-          to="/projects/$projectId/edit"
-          params={{ projectId }}
-          aria-label="Rename project"
-          className="text-[var(--color-text-faint)] hover:text-[var(--color-accent)]"
-        >
-          <Pencil className="h-4 w-4" />
-        </Link>
-        <Link
-          to="/projects/$projectId/config"
-          params={{ projectId }}
-          aria-label="Apply project config"
-          className="text-[var(--color-text-faint)] hover:text-[var(--color-accent)]"
-        >
-          <FileCode className="h-4 w-4" />
+        <Link to="/projects/$projectId/config" params={{ projectId }}>
+          <Button variant="outline" size="sm">
+            <FileCode className="h-4 w-4" />
+            Config
+          </Button>
         </Link>
       </PageHeader>
 
@@ -128,7 +131,7 @@ function ProjectDetail() {
 
       {resources.length > 0 && (
         <>
-          <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
             {resources.map((resource) =>
               resource.kind === "service" ? (
                 <ResourceRow
@@ -143,6 +146,15 @@ function ProjectDetail() {
                     resource.data.public_domain ? `https://${resource.data.public_domain}` : undefined
                   }
                   detailHref={`/projects/${projectId}/services/${resource.data.id}`}
+                  onUpdate={() =>
+                    navigate({
+                      to: "/projects/$projectId/services/$serviceId/edit",
+                      params: {
+                        projectId,
+                        serviceId: resource.data.id,
+                      },
+                    })
+                  }
                   onDelete={() => setPendingService(resource.data)}
                 />
               ) : (
@@ -154,6 +166,15 @@ function ProjectDetail() {
                   size={`${resource.data.storage} GB`}
                   domain={resource.data.internal_domain || "internal"}
                   detailHref={`/projects/${projectId}/databases/${resource.data.id}`}
+                  onUpdate={() =>
+                    navigate({
+                      to: "/projects/$projectId/databases/$databaseId/edit",
+                      params: {
+                        projectId,
+                        databaseId: resource.data.id,
+                      },
+                    })
+                  }
                   onDelete={() => setPendingDatabase(resource.data)}
                 />
               ),

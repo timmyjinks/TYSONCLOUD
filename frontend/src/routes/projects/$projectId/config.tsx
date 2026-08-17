@@ -12,10 +12,7 @@ export const Route = createFileRoute("/projects/$projectId/config")({
   component: ProjectConfigPage,
 });
 
-const EXAMPLE_TOML = `# Define the resources this project should have, then apply.
-# This runs once — it creates what's listed below, it doesn't sync or delete.
-
-[[services]]
+const EXAMPLE_TOML = `[[services]]
 name = "web"
 image = "myorg/web:latest"
 port = 3000
@@ -41,7 +38,7 @@ function ProjectConfigPage() {
   const qc = useQueryClient();
   const applyConfig = useApplyProjectConfig(projectId);
 
-  const [content, setContent] = useState(EXAMPLE_TOML);
+  const [content, setContent] = useState("");
 
   const issues =
     applyConfig.error instanceof ApiRequestError ? applyConfig.error.body?.issues : undefined;
@@ -78,6 +75,7 @@ function ProjectConfigPage() {
         onChange={(e) => setContent(e.target.value)}
         spellCheck={false}
         rows={24}
+        placeholder={EXAMPLE_TOML}
         className="text-sm leading-relaxed font-mono"
       />
     </FormShell>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useDeleteProject, useProjects } from "@/lib/api/projects";
 import { getErrorMessage } from "@/lib/api/client";
 import { ProjectRow } from "@/components/project-row";
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/dashboard/")({
 function DashboardIndex() {
   const { data: projects, isLoading, error, refetch } = useProjects();
   const deleteProject = useDeleteProject();
+  const navigate = useNavigate();
   const [pendingDelete, setPendingDelete] = useState<Project | null>(null);
 
   return (
@@ -57,13 +58,14 @@ function DashboardIndex() {
       )}
 
       {projects && projects.length > 0 && (
-        <div className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
           {projects.map((project) => (
             <ProjectRow
               key={project.id}
               name={project.name}
               id={project.id}
               href={`/projects/${project.id}`}
+              onUpdate={() => navigate({ to: "/projects/$projectId/edit", params: { projectId: project.id } })}
               onDelete={() => setPendingDelete(project)}
             />
           ))}

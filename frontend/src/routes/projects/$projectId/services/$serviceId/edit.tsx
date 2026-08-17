@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useService, useUpdateService } from "@/lib/api/services";
 import { getErrorMessage } from "@/lib/api/client";
+import { formatEnvLines } from "@/lib/utils";
 import { ErrorBanner } from "@/components/error-banner";
 import { FormShell } from "@/components/form-shell";
 import { Input } from "@/components/ui/input";
@@ -28,11 +29,7 @@ function EditServicePage() {
     setName(service.name);
     setImage(service.image);
     setPort(String(service.port));
-    setEnv(
-      Object.entries(service.env ?? {})
-        .map(([key, value]) => `${key}=${value}`)
-        .join("\n"),
-    );
+    setEnv(formatEnvLines(service.env ?? {}));
   }, [service]);
 
   if (error) {
