@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"context"
+	"strings"
 
 	"github.com/timmyjinks/tysoncloud/util"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -45,7 +46,7 @@ func (d *KubernetesService) GetSecret(ctx context.Context, resource Resource) (m
 
 	env := make(map[string]string, len(secret.Data))
 	for k, v := range secret.Data {
-		env[k] = string(v)
+		env[k] = strings.TrimRight(string(v), "\r\n")
 	}
 	return env, nil
 }
