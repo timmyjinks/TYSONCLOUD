@@ -132,6 +132,37 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               color: "#f4ede1",
             },
           },
+          avatarImageActionsUpload: {
+            backgroundColor: "#ff4433",
+            color: "#17140f",
+            "&:hover": {
+              backgroundColor: "#e23a2c",
+            },
+            "&:focus": {
+              backgroundColor: "#e23a2c",
+            },
+          },
+          avatarImageActionsUploadInDropArea: {
+            backgroundColor: "#ff4433",
+            color: "#17140f",
+            "&:hover": {
+              backgroundColor: "#e23a2c",
+            },
+          },
+          avatarImageActionsDownload: {
+            backgroundColor: "#1d1913",
+            color: "#f4ede1",
+            "&:hover": {
+              backgroundColor: "#242019",
+            },
+          },
+          avatarImageActionsRemove: {
+            backgroundColor: "#1d1913",
+            color: "#ff4433",
+            "&:hover": {
+              backgroundColor: "#242019",
+            },
+          },
         },
       }}
     >
