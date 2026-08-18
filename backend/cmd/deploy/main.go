@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/clerk/clerk-sdk-go/v2"
-	"github.com/timmyjinks/tysoncloud/cloudflare"
 	"github.com/timmyjinks/tysoncloud/config"
 	"github.com/timmyjinks/tysoncloud/db"
 	"github.com/timmyjinks/tysoncloud/deploy"
@@ -19,7 +18,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cloudflareService := cloudflare.NewCloudflareService(cfg.Cloudflare.ApiToken, cfg.Cloudflare.AccountID, cfg.Cloudflare.TunnelID, cfg.Cloudflare.ZoneID, cfg.Cloudflare.BaseDomain)
 	supabaseCli, err := db.NewSupabaseStorage(cfg.Supabase.ProjectURL, cfg.Supabase.APIKey)
 	if err != nil {
 		panic(err)
@@ -40,7 +38,6 @@ func main() {
 	app := &server.Application{
 		Config:       cfg,
 		Supabase:     supabaseService,
-		Cloudflare:   cloudflareService,
 		Deploy:       deployService,
 		TaskRegistry: taskRegistry,
 	}

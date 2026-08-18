@@ -262,20 +262,6 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 		rb.deployedDatabases[j] = struct{}{}
 	}
 
-	for i, service := range serviceTables {
-		if err := app.Cloudflare.CreateRecord(r.Context(), "tc-"+service.Id); err != nil {
-			writeError(w, http.StatusInternalServerError, "The service deployed, but we couldn't set up its domain. Please try again or contact support.", err)
-			return
-		}
-		rb.cfRecords[i] = struct{}{}
-
-		if err := app.Cloudflare.CreateRoute(r.Context(), "tc-"+service.Id); err != nil {
-			writeError(w, http.StatusInternalServerError, "The service deployed, but we couldn't finish routing its domain. Please try again or contact support.", err)
-			return
-		}
-		rb.cfRoutes[i] = struct{}{}
-	}
-
 	success = true
 	w.WriteHeader(http.StatusCreated)
 }
