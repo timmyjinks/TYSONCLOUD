@@ -81,6 +81,11 @@ export type ApiError = {
   issues?: { line?: number; message: string }[];
 };
 
+export type BulkDeleteResponse = {
+  deleted: string[];
+  failed: { id: string; error: string }[];
+};
+
 export type ProjectConfigApplyRequest = {
   content: string;
 };
