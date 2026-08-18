@@ -45,6 +45,20 @@ type DatabaseDeleteRequest struct {
 	Id string `json:"id"`
 }
 
+type BulkDeleteRequest struct {
+	Ids []string `json:"ids"`
+}
+
+type FailedDelete struct {
+	Id    string `json:"id"`
+	Error string `json:"error"`
+}
+
+type BulkDeleteResponse struct {
+	Deleted []string       `json:"deleted"`
+	Failed  []FailedDelete `json:"failed"`
+}
+
 type ServiceResponse struct {
 	Id             string            `json:"id"`
 	ProjectId      string            `json:"project_id"`

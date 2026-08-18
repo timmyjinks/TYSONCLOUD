@@ -339,6 +339,66 @@ func (app *Application) DeleteService(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(204)
 }
 
+func (app *Application) DeleteServices(w http.ResponseWriter, r *http.Request) {
+	projectId := mux.Vars(r)["project_id"]
+	if projectId == "" {
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
+		return
+	}
+
+	claims, ok := clerk.SessionClaimsFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
+		return
+	}
+
+	var req BulkDeleteRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "That deletion request wasn't valid.", err)
+		return
+	}
+
+	if len(req.Ids) == 0 {
+		writeError(w, http.StatusBadRequest, "At least one service ID is required.", nil)
+		return
+	}
+
+	deleted := []string{}
+	failed := []FailedDelete{}
+	for _, serviceId := range req.Ids {
+		if err := app.Supabase.DeleteService(serviceId, claims.Subject); err != nil {
+			failed = append(failed, FailedDelete{Id: serviceId, Error: "Couldn't delete the service."})
+			continue
+		}
+
+		// The DB record is gone at this point regardless of what happens
+		// below — log infra cleanup failures for ops rather than failing
+		// the whole batch.
+		if err := app.Deploy.DeleteService(r.Context(), deploy.Service{
+			Namespace: "proj-" + projectId,
+			Name:      "svc-" + serviceId,
+		}); err != nil {
+			slog.Error("failed to clean up service infrastructure", "service_id", serviceId, "err", err)
+		}
+
+		if err := app.Cloudflare.DeleteRecord(r.Context(), "tc-"+serviceId); err != nil {
+			slog.Error("failed to clean up service DNS record", "service_id", serviceId, "err", err)
+		}
+
+		if err := app.Cloudflare.DeleteRoute(r.Context(), "tc-"+serviceId); err != nil {
+			slog.Error("failed to clean up service route", "service_id", serviceId, "err", err)
+		}
+
+		deleted = append(deleted, serviceId)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(BulkDeleteResponse{Deleted: deleted, Failed: failed}); err != nil {
+		writeError(w, http.StatusInternalServerError, msgServerError, err)
+		return
+	}
+}
+
 func ToServicesResponse(servicesTable []store.ServicesTable) []ServiceResponse {
 	var services []ServiceResponse = []ServiceResponse{}
 	for _, service := range servicesTable {
