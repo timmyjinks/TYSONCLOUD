@@ -11,6 +11,7 @@ import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { ErrorBanner } from "@/components/error-banner";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { SERVICE_RESOURCE_LIMITS } from "@/lib/resource-limits";
 import type { Service, Database } from "@/lib/api/types";
 
 export const Route = createFileRoute("/projects/$projectId/")({
@@ -140,6 +141,7 @@ function ProjectDetail() {
                   name={resource.data.name}
                   status={resource.data.status}
                   runtime={resource.data.image}
+                  subtitle={`${SERVICE_RESOURCE_LIMITS.cpu} · ${SERVICE_RESOURCE_LIMITS.memory}`}
                   size={`:${resource.data.port}`}
                   domain={resource.data.public_domain}
                   domainHref={
