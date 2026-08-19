@@ -371,22 +371,11 @@ func (app *Application) DeleteServices(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		// The DB record is gone at this point regardless of what happens
-		// below — log infra cleanup failures for ops rather than failing
-		// the whole batch.
 		if err := app.Deploy.DeleteService(r.Context(), deploy.Service{
 			Namespace: "proj-" + projectId,
 			Name:      "svc-" + serviceId,
 		}); err != nil {
 			slog.Error("failed to clean up service infrastructure", "service_id", serviceId, "err", err)
-		}
-
-		if err := app.Cloudflare.DeleteRecord(r.Context(), "tc-"+serviceId); err != nil {
-			slog.Error("failed to clean up service DNS record", "service_id", serviceId, "err", err)
-		}
-
-		if err := app.Cloudflare.DeleteRoute(r.Context(), "tc-"+serviceId); err != nil {
-			slog.Error("failed to clean up service route", "service_id", serviceId, "err", err)
 		}
 
 		deleted = append(deleted, serviceId)

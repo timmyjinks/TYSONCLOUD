@@ -254,9 +254,6 @@ func (app *Application) DeleteDatabases(w http.ResponseWriter, r *http.Request) 
 			continue
 		}
 
-		// The DB record is gone at this point regardless of what happens
-		// below — log infra cleanup failures for ops rather than failing
-		// the whole batch.
 		if err := app.Deploy.DeleteDatabase(r.Context(), deploy.Database{
 			Namespace: "proj-" + projectId,
 			Name:      "db-" + databaseId,
