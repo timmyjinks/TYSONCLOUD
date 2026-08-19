@@ -216,16 +216,6 @@ func (app *Application) CreateService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := app.Cloudflare.CreateRecord(r.Context(), "tc-"+res.Id); err != nil {
-		writeError(w, http.StatusInternalServerError, "The service deployed, but we couldn't set up its domain. Please try again or contact support.", err)
-		return
-	}
-
-	if err := app.Cloudflare.CreateRoute(r.Context(), "tc-"+res.Id); err != nil {
-		writeError(w, http.StatusInternalServerError, "The service deployed, but we couldn't finish routing its domain. Please try again or contact support.", err)
-		return
-	}
-
 	if _, err := app.Supabase.UpdateServiceStatus(res.Id, userId, "running"); err != nil {
 		writeError(w, http.StatusInternalServerError, "The service deployed, but its status couldn't be updated. Refresh to check its current state.", err)
 		return
@@ -344,14 +334,6 @@ func (app *Application) DeleteService(w http.ResponseWriter, r *http.Request) {
 		Name:      "svc-" + serviceId,
 	}); err != nil {
 		slog.Error("failed to clean up service infrastructure", "service_id", serviceId, "err", err)
-	}
-
-	if err := app.Cloudflare.DeleteRecord(r.Context(), "tc-"+serviceId); err != nil {
-		slog.Error("failed to clean up service DNS record", "service_id", serviceId, "err", err)
-	}
-
-	if err := app.Cloudflare.DeleteRoute(r.Context(), "tc-"+serviceId); err != nil {
-		slog.Error("failed to clean up service route", "service_id", serviceId, "err", err)
 	}
 
 	w.WriteHeader(204)

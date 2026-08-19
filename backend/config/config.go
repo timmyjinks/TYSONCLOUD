@@ -12,16 +12,7 @@ import (
 type Config struct {
 	Server     Server
 	Supabase   Supabase
-	Cloudflare Cloudflare
 	KubeConfig string `env:"KUBECONFIG"`
-}
-
-type Cloudflare struct {
-	AccountID  string `env:"CLOUDFLARE_ACCOUNT_ID"`
-	ZoneID     string `env:"CLOUDFLARE_ZONE_ID"`
-	TunnelID   string `env:"CLOUDFLARE_TUNNEL_ID"`
-	ApiToken   string `env:"CLOUDFLARE_API_TOKEN"`
-	BaseDomain string `env:"CLOUDFLARE_BASE_DOMAIN"`
 }
 
 type Server struct {
@@ -50,13 +41,6 @@ func Load() (Config, error) {
 		Supabase: Supabase{
 			ProjectURL: getStringOrDie("SUPABASE_URL"),
 			APIKey:     getStringOrDie("SUPABASE_API_KEY"),
-		},
-		Cloudflare: Cloudflare{
-			AccountID:  getStringOrDie("CLOUDFLARE_ACCOUNT_ID"),
-			ZoneID:     getStringOrDie("CLOUDFLARE_ZONE_ID"),
-			TunnelID:   getStringOrDie("CLOUDFLARE_TUNNEL_ID"),
-			ApiToken:   getStringOrDie("CLOUDFLARE_API_TOKEN"),
-			BaseDomain: getString("CLOUDFLARE_BASE_DOMAIN", "tysonjenkins.dev"),
 		},
 		KubeConfig: getString("KUBECONFIG", "~/.kube/config"),
 	}, nil

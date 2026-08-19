@@ -43,20 +43,6 @@ func (app *Application) rollbackProjectConfig(rb *configRollback) {
 	ctx := context.Background()
 	namespace := "proj-" + rb.projectId
 
-	for i := range rb.cfRoutes {
-		service := rb.serviceTables[i]
-		if err := app.Cloudflare.DeleteRoute(ctx, "tc-"+service.Id); err != nil {
-			slog.Error("rollback: failed to delete cloudflare route", "project_id", rb.projectId, "service_id", service.Id, "err", err)
-		}
-	}
-
-	for i := range rb.cfRecords {
-		service := rb.serviceTables[i]
-		if err := app.Cloudflare.DeleteRecord(ctx, "tc-"+service.Id); err != nil {
-			slog.Error("rollback: failed to delete cloudflare record", "project_id", rb.projectId, "service_id", service.Id, "err", err)
-		}
-	}
-
 	for j := range rb.deployedDatabases {
 		database := rb.databaseTables[j]
 		if err := app.Deploy.DeleteDatabase(ctx, deploy.Database{
