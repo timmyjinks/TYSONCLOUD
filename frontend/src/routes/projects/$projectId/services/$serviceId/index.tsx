@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { ServiceLogsDrawer } from "@/components/service-logs-drawer";
 import { ErrorBanner } from "@/components/error-banner";
+import { SERVICE_RESOURCE_LIMITS } from "@/lib/resource-limits";
 
 export const Route = createFileRoute("/projects/$projectId/services/$serviceId/")({
   component: ServiceDetail,
@@ -119,6 +120,8 @@ function ServiceDetail() {
             },
             { label: "Image", value: service.image, mono: true },
             { label: "Port", value: String(service.port), mono: true },
+            { label: "Max CPU", value: SERVICE_RESOURCE_LIMITS.cpu, mono: true },
+            { label: "Max memory", value: SERVICE_RESOURCE_LIMITS.memory, mono: true },
           ]}
         />
       </div>

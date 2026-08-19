@@ -22,11 +22,11 @@ func (d *KubernetesService) CreateDeployment(ctx context.Context, resource Resou
 			Resources: &appcorev1.ResourceRequirementsApplyConfiguration{
 				Limits: &corev1.ResourceList{
 					corev1.ResourceCPU:    resourcev1.MustParse("500m"),
-					corev1.ResourceMemory: resourcev1.MustParse("256Mi"),
+					corev1.ResourceMemory: resourcev1.MustParse("1Gi"),
 				},
 				Requests: &corev1.ResourceList{
 					corev1.ResourceCPU:    resourcev1.MustParse("100m"),
-					corev1.ResourceMemory: resourcev1.MustParse("1Mi"),
+					corev1.ResourceMemory: resourcev1.MustParse("100Mi"),
 				},
 			},
 			Ports: []appcorev1.ContainerPortApplyConfiguration{

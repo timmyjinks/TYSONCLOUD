@@ -12,6 +12,8 @@ type ResourceRowProps = {
   status?: string;
   /** e.g. image tag or db engine version */
   runtime: string;
+  /** optional second line under runtime, e.g. resource limits */
+  subtitle?: string;
   /** e.g. ":3000" or "12 GB" */
   size: string;
   /** domain text — colored as a link when href is present, muted otherwise (e.g. "internal") */
@@ -28,6 +30,7 @@ export function ResourceRow({
   name,
   status,
   runtime,
+  subtitle,
   size,
   domain,
   domainHref,
@@ -56,8 +59,15 @@ export function ResourceRow({
 
       <span className="w-24 shrink-0">{status && <StatusPill status={status} />}</span>
 
-      <span className="flex-1 truncate font-mono text-base text-[var(--color-text-faint)]">
-        {runtime}
+      <span className="flex-1">
+        <span className="block truncate font-mono text-base text-[var(--color-text-faint)]">
+          {runtime}
+        </span>
+        {subtitle && (
+          <span className="mt-0.5 block truncate text-sm text-[var(--color-text-faint)]">
+            {subtitle}
+          </span>
+        )}
       </span>
 
       <span className="w-16 shrink-0 text-right font-mono text-base text-[var(--color-text-faint)]">

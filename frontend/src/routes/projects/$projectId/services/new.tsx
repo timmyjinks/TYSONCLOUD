@@ -6,6 +6,7 @@ import { FormShell } from "@/components/form-shell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SERVICE_RESOURCE_LIMITS } from "@/lib/resource-limits";
 
 export const Route = createFileRoute("/projects/$projectId/services/new")({
   component: NewServicePage,
@@ -90,6 +91,12 @@ function NewServicePage() {
           One <code>KEY=value</code> pair per line. Optional.
         </p>
       </div>
+
+      <p className="text-xs text-[var(--color-text-muted)]">
+        Each service runs with a maximum of{" "}
+        <code className="font-mono">{SERVICE_RESOURCE_LIMITS.cpu}</code> and{" "}
+        <code className="font-mono">{SERVICE_RESOURCE_LIMITS.memory}</code> memory.
+      </p>
     </FormShell>
   );
 }
