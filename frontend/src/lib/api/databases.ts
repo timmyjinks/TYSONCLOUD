@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
-import type { Database, DatabaseCreateRequest, DatabaseUpdateRequest } from "./types";
+import type { BulkDeleteResponse, Database, DatabaseCreateRequest, DatabaseUpdateRequest } from "./types";
 
 export const databaseKeys = {
   byProject: (projectId: string) => ["projects", projectId, "databases"] as const,
@@ -49,6 +49,15 @@ export function useDeleteDatabase(projectId: string) {
   return useMutation({
     mutationFn: (databaseId: string) =>
       api.delete<void>(`/projects/${projectId}/databases/${databaseId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: databaseKeys.byProject(projectId) }),
+  });
+}
+
+export function useDeleteDatabases(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (databaseIds: string[]) =>
+      api.delete<BulkDeleteResponse>(`/projects/${projectId}/databases`, { ids: databaseIds }),
     onSuccess: () => qc.invalidateQueries({ queryKey: databaseKeys.byProject(projectId) }),
   });
 }

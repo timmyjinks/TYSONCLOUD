@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,9 @@ type ResourceRowProps = {
   detailHref: string;
   onUpdate: () => void;
   onDelete: () => void;
+  /** When provided, renders a selection checkbox at the start of the row. */
+  selected?: boolean;
+  onToggleSelect?: () => void;
   className?: string;
 };
 
@@ -37,15 +41,27 @@ export function ResourceRow({
   detailHref,
   onUpdate,
   onDelete,
+  selected,
+  onToggleSelect,
   className,
 }: ResourceRowProps) {
   return (
     <div
       className={cn(
         "group flex items-center gap-5 border-t border-[var(--color-border)] px-5 py-5 first:border-t-0 first:rounded-t-lg last:rounded-b-lg hover:bg-[var(--color-surface-hover)]",
+        selected && "bg-[var(--color-surface-2)]",
         className,
       )}
     >
+      {onToggleSelect && (
+        <Checkbox
+          aria-label={`Select ${name}`}
+          checked={selected}
+          onChange={onToggleSelect}
+          className="shrink-0"
+        />
+      )}
+
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--color-surface-2)] text-[var(--color-text-muted)]">
         {icon}
       </span>

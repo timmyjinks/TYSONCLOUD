@@ -22,6 +22,7 @@ func (s *Application) registerRoutes(
 
 	r.Handle("/services/{service_id}", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.GetService))).Methods("GET")
 	r.Handle("/projects/{project_id}/services", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.GetServices))).Methods("GET")
+	r.Handle("/projects/{project_id}/services", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.DeleteServices))).Methods("DELETE")
 	r.HandleFunc("/projects/{project_id}/services/{service_id}/logs", s.GetServiceLogs).Methods("GET")
 	r.Handle("/projects/{project_id}/services", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.CreateService))).Methods("POST")
 	r.Handle("/projects/{project_id}/services/{service_id}", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.UpdateService))).Methods("PUT")
@@ -33,6 +34,7 @@ func (s *Application) registerRoutes(
 
 	r.Handle("/databases/{database_id}", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.GetDatabase))).Methods("GET")
 	r.Handle("/projects/{project_id}/databases", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.GetDatabases))).Methods("GET")
+	r.Handle("/projects/{project_id}/databases", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.DeleteDatabases))).Methods("DELETE")
 	r.Handle("/projects/{project_id}/databases", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.CreateDatabase))).Methods("POST")
 	r.Handle("/projects/{project_id}/databases/{database_id}", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.UpdateDatabase))).Methods("PUT")
 	r.Handle("/projects/{project_id}/databases/{database_id}", clerkhttp.RequireHeaderAuthorization()(http.HandlerFunc(s.DeleteDatabase))).Methods("DELETE")

@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/clerk/clerk-sdk-go/v2"
@@ -219,6 +220,56 @@ func (app *Application) DeleteDatabase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(204)
+}
+
+func (app *Application) DeleteDatabases(w http.ResponseWriter, r *http.Request) {
+	projectId := mux.Vars(r)["project_id"]
+	if projectId == "" {
+		writeError(w, http.StatusBadRequest, "A project ID is required.", nil)
+		return
+	}
+
+	claims, ok := clerk.SessionClaimsFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, msgUnauthorized, nil)
+		return
+	}
+
+	var req BulkDeleteRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "That deletion request wasn't valid.", err)
+		return
+	}
+
+	if len(req.Ids) == 0 {
+		writeError(w, http.StatusBadRequest, "At least one database ID is required.", nil)
+		return
+	}
+
+	deleted := []string{}
+	failed := []FailedDelete{}
+	for _, databaseId := range req.Ids {
+		if err := app.Supabase.DeleteDatabase(databaseId, claims.Subject); err != nil {
+			failed = append(failed, FailedDelete{Id: databaseId, Error: "Couldn't delete the database."})
+			continue
+		}
+
+		if err := app.Deploy.DeleteDatabase(r.Context(), deploy.Database{
+			Namespace: "proj-" + projectId,
+			Name:      "db-" + databaseId,
+			Engine:    "postgres",
+		}); err != nil {
+			slog.Error("failed to clean up database infrastructure", "database_id", databaseId, "err", err)
+		}
+
+		deleted = append(deleted, databaseId)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(BulkDeleteResponse{Deleted: deleted, Failed: failed}); err != nil {
+		writeError(w, http.StatusInternalServerError, msgServerError, err)
+		return
+	}
 }
 
 func ToDatabasesResponse(databasesTable []store.DatabasesTable) []DatabaseResponse {

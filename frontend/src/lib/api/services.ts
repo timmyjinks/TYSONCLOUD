@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
-import type { Service, ServiceCreateRequest, ServiceUpdateRequest } from "./types";
+import type { BulkDeleteResponse, Service, ServiceCreateRequest, ServiceUpdateRequest } from "./types";
 
 export const serviceKeys = {
   byProject: (projectId: string) => ["projects", projectId, "services"] as const,
@@ -49,6 +49,15 @@ export function useDeleteService(projectId: string) {
   return useMutation({
     mutationFn: (serviceId: string) =>
       api.delete<void>(`/projects/${projectId}/services/${serviceId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: serviceKeys.byProject(projectId) }),
+  });
+}
+
+export function useDeleteServices(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (serviceIds: string[]) =>
+      api.delete<BulkDeleteResponse>(`/projects/${projectId}/services`, { ids: serviceIds }),
     onSuccess: () => qc.invalidateQueries({ queryKey: serviceKeys.byProject(projectId) }),
   });
 }
