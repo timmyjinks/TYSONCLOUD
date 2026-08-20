@@ -24,7 +24,7 @@ func (d *DeployService) CreateDatabase(ctx context.Context, database Database) e
 			StorageGB: database.StorageGB,
 		})
 	default:
-		return errors.New("DB engine not found")
+		return errors.New("unsupported database engine")
 	}
 }
 
@@ -36,6 +36,6 @@ func (d *DeployService) DeleteDatabase(ctx context.Context, database Database) e
 			Name:      database.Name,
 		})
 	default:
-		return errors.New("DB engine not found")
+		return errors.New("unsupported database engine")
 	}
 }

@@ -66,7 +66,7 @@ func (app *Application) CreateVolume(w http.ResponseWriter, r *http.Request) {
 	userId := claims.Subject
 
 	if _, err := app.Supabase.CreateVolume(serviceId, userId, volume.MountPath, volume.StorageGB); err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't attach the volume. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't attach the volume.", err)
 		return
 	}
 
@@ -77,7 +77,7 @@ func (app *Application) CreateVolume(w http.ResponseWriter, r *http.Request) {
 		MountPath: volume.MountPath,
 		StorageGB: volume.StorageGB,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "The volume record was created, but we couldn't attach it. Please try again or contact support.", err)
+		writeError(w, http.StatusInternalServerError, "Your volume was created, but we couldn't attach it. A refresh will show its current status.", err)
 		return
 	}
 
@@ -104,7 +104,7 @@ func (app *Application) DeleteVolume(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := app.Supabase.DeleteVolume(serviceId, claims.Subject); err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't detach the volume. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't detach the volume.", err)
 		return
 	}
 
@@ -112,7 +112,7 @@ func (app *Application) DeleteVolume(w http.ResponseWriter, r *http.Request) {
 		Namespace: "proj-" + projectId,
 		Name:      "svc-" + serviceId,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "The volume record was removed, but it couldn't be detached from the running service. Please contact support.", err)
+		writeError(w, http.StatusInternalServerError, "Your volume was removed, but we couldn't detach it from your running service. A refresh will show its current status.", err)
 		return
 	}
 

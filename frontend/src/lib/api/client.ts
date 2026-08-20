@@ -46,7 +46,7 @@ const STATUS_FALLBACK_MESSAGES: Record<number, string> = {
 
 function statusFallbackMessage(status: number): string {
   if (status >= 500) return "Something went wrong on our end. Please try again.";
-  return STATUS_FALLBACK_MESSAGES[status] ?? "That request didn't work. Please try again.";
+  return STATUS_FALLBACK_MESSAGES[status] ?? "That request didn't work as expected.";
 }
 
 const NETWORK_ERROR_MESSAGES = new Set([
@@ -63,9 +63,9 @@ export function getErrorMessage(err: unknown): string {
   if (err instanceof TypeError) {
     return NETWORK_ERROR_MESSAGES.has(err.message) ? NETWORK_ERROR_MESSAGE : err.message;
   }
-  if (err instanceof Error) return err.message || "Something unexpected went wrong. Please try again.";
+  if (err instanceof Error) return err.message || "Something unexpected went wrong.";
   if (typeof err === "string") return err;
-  return "Something unexpected went wrong. Please try again.";
+  return "Something unexpected went wrong.";
 }
 
 async function request<T>(

@@ -20,7 +20,7 @@ func (app *Application) SupabaseAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userJWT, err := extractTokenFromCookie(r)
 		if err != nil {
-			http.Error(w, "missing or invalid session", http.StatusUnauthorized)
+			http.Error(w, msgUnauthorized, http.StatusUnauthorized)
 			return
 		}
 
@@ -30,7 +30,7 @@ func (app *Application) SupabaseAuthMiddleware(next http.Handler) http.Handler {
 			&supabase.ClientOptions{},
 		)
 		if err != nil {
-			http.Error(w, "server error", http.StatusInternalServerError)
+			http.Error(w, msgServerError, http.StatusInternalServerError)
 			return
 		}
 

@@ -51,7 +51,7 @@ func (app *Application) GetProjects(w http.ResponseWriter, r *http.Request) {
 
 	projects, err := app.Supabase.GetProjects(claims.Subject)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't load your projects. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't load your projects.", err)
 		return
 	}
 
@@ -82,7 +82,7 @@ func (app *Application) CreateProject(w http.ResponseWriter, r *http.Request) {
 
 	res, err := app.Supabase.CreateProject(claims.Subject, project.Name)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't create the project. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't create the project.", err)
 		return
 	}
 
@@ -90,7 +90,7 @@ func (app *Application) CreateProject(w http.ResponseWriter, r *http.Request) {
 		if delErr := app.Supabase.DeleteProject(claims.Subject, res.Id); delErr != nil {
 			slog.Error("failed to clean up project after infrastructure setup failed", "project_id", res.Id, "err", delErr)
 		}
-		writeError(w, http.StatusInternalServerError, "The project was created, but we couldn't finish setting up its infrastructure. Please try again or contact support.", err)
+		writeError(w, http.StatusInternalServerError, "Your project was created, but we couldn't finish setting it up, so we removed it. Please try again.", err)
 		return
 	}
 
@@ -122,7 +122,7 @@ func (app *Application) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := app.Supabase.UpdateProject(projectId, claims.Subject, *project.Name); err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't save the project name. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't save the project name.", err)
 		return
 	}
 }
@@ -141,7 +141,7 @@ func (app *Application) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := app.Supabase.DeleteProject(claims.Subject, projectId); err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't delete the project. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't delete the project.", err)
 		return
 	}
 
@@ -196,7 +196,7 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 	for _, service := range config.Services {
 		res, err := app.Supabase.CreateService(userId, projectId, service.Name, service.Image, int32(service.Port))
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Couldn't create the service. Please try again.", err)
+			writeError(w, http.StatusInternalServerError, "Couldn't create one of the services.", err)
 			return
 		}
 		rb.serviceTables = append(rb.serviceTables, res)
@@ -206,13 +206,13 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 	for _, database := range config.Databases {
 		port, err := getPort(database.Engine)
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, err.Error(), err)
+			writeError(w, http.StatusBadRequest, "That database engine isn't supported. Supported engines: postgres.", nil)
 			return
 		}
 
 		res, err := app.Supabase.CreateDatabase(userId, projectId, database.Name, database.Engine, port, int32(database.StorageGB))
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Couldn't create the service. Please try again.", err)
+			writeError(w, http.StatusInternalServerError, "Couldn't create one of the databases.", err)
 			return
 		}
 		rb.databaseTables = append(rb.databaseTables, res)
@@ -223,7 +223,7 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 
 	for i, service := range services {
 		if err := app.Deploy.CreateService(r.Context(), service); err != nil {
-			writeError(w, http.StatusInternalServerError, "Couldn't deploy the project's services. Please try again or contact support.", err)
+			writeError(w, http.StatusInternalServerError, "Your services were created, but we couldn't start them. A refresh will show which ones are running.", err)
 			return
 		}
 		rb.deployedServices[i] = struct{}{}
@@ -235,7 +235,7 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if _, err := app.Supabase.CreateVolume(serviceTables[i].Id, userId, service.Volume.MountPath, int32(service.Volume.StorageGB)); err != nil {
-			writeError(w, http.StatusInternalServerError, "Couldn't attach the volume. Please try again.", err)
+			writeError(w, http.StatusInternalServerError, "Couldn't attach one of the volumes.", err)
 			return
 		}
 		rb.volumesCreated[i] = struct{}{}
@@ -248,7 +248,7 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 			StorageGB: int32(service.Volume.StorageGB),
 		})
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "The volume record was created, but we couldn't attach it. Please try again or contact support.", err)
+			writeError(w, http.StatusInternalServerError, "We couldn't attach one of your volumes. A refresh will show its current status.", err)
 			return
 		}
 		rb.volumesAttached[i] = struct{}{}
@@ -256,7 +256,7 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 
 	for j, database := range databases {
 		if err := app.Deploy.CreateDatabase(r.Context(), database); err != nil {
-			writeError(w, http.StatusInternalServerError, "Couldn't provision the project's databases. Please try again or contact support.", err)
+			writeError(w, http.StatusInternalServerError, "Your databases were created, but we couldn't finish setting them up. A refresh will show their current status.", err)
 			return
 		}
 		rb.deployedDatabases[j] = struct{}{}
