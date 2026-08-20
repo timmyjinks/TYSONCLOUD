@@ -76,7 +76,7 @@ func (app *Application) GetServices(w http.ResponseWriter, r *http.Request) {
 
 	services, err := app.Supabase.GetServices(projectId, claims.Subject)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't load the project's services. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't load the project's services.", err)
 		return
 	}
 
@@ -197,7 +197,7 @@ func (app *Application) CreateService(w http.ResponseWriter, r *http.Request) {
 
 	res, err := app.Supabase.CreateService(userId, projectId, service.Name, service.Image, service.Port)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't create the service. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't create the service.", err)
 		return
 	}
 
@@ -212,12 +212,12 @@ func (app *Application) CreateService(w http.ResponseWriter, r *http.Request) {
 		if _, statusErr := app.Supabase.UpdateServiceStatus(res.Id, userId, "failed"); statusErr != nil {
 			slog.Error("failed to mark service failed after deploy error", "service_id", res.Id, "err", statusErr)
 		}
-		writeError(w, http.StatusInternalServerError, "Couldn't deploy the service. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Your service was created, but we couldn't start it. Refresh to check its status.", err)
 		return
 	}
 
 	if _, err := app.Supabase.UpdateServiceStatus(res.Id, userId, "running"); err != nil {
-		writeError(w, http.StatusInternalServerError, "The service deployed, but its status couldn't be updated. Refresh to check its current state.", err)
+		writeError(w, http.StatusInternalServerError, "Your service was started, but we couldn't confirm its status. Refresh to check.", err)
 		return
 	}
 
@@ -275,7 +275,7 @@ func (app *Application) UpdateService(w http.ResponseWriter, r *http.Request) {
 
 	res, err := app.Supabase.UpdateService(serviceId, userId, *service.Name, *service.Image, *service.Port)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't save the service. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't save the service.", err)
 		return
 	}
 
@@ -290,12 +290,12 @@ func (app *Application) UpdateService(w http.ResponseWriter, r *http.Request) {
 		if _, statusErr := app.Supabase.UpdateServiceStatus(res.Id, userId, "failed"); statusErr != nil {
 			slog.Error("failed to mark service failed after deploy error", "service_id", res.Id, "err", statusErr)
 		}
-		writeError(w, http.StatusInternalServerError, "Couldn't redeploy the service with your changes. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "We saved your changes, but couldn't restart your service. Refresh to check its status.", err)
 		return
 	}
 
 	if _, err := app.Supabase.UpdateServiceStatus(res.Id, userId, "running"); err != nil {
-		writeError(w, http.StatusInternalServerError, "The service redeployed, but its status couldn't be updated. Refresh to check its current state.", err)
+		writeError(w, http.StatusInternalServerError, "Your service was restarted, but we couldn't confirm its status. Refresh to check.", err)
 		return
 	}
 }
@@ -320,7 +320,7 @@ func (app *Application) DeleteService(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := app.Supabase.DeleteService(serviceId, claims.Subject); err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't delete the service. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't delete the service.", err)
 		return
 	}
 

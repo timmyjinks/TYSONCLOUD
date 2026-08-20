@@ -62,7 +62,7 @@ func (s *SupabaseStore) CreateProject(userId, name string) (ProjectsTable, error
 	}
 
 	if len(res) == 0 {
-		return ProjectsTable{}, errors.New("error creating project")
+		return ProjectsTable{}, errors.New("the project wasn't created")
 	}
 
 	return res[0], nil

@@ -71,7 +71,7 @@ func (app *Application) GetDatabases(w http.ResponseWriter, r *http.Request) {
 
 	databases, err := app.Supabase.GetDatabases(projectId, claims.Subject)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't load the project's databases. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't load the project's databases.", err)
 		return
 	}
 
@@ -112,7 +112,7 @@ func (app *Application) CreateDatabase(w http.ResponseWriter, r *http.Request) {
 
 	res, err := app.Supabase.CreateDatabase(userId, projectId, database.Name, database.Engine, port, database.StorageGB)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't create the database. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't create the database.", err)
 		return
 	}
 
@@ -122,7 +122,7 @@ func (app *Application) CreateDatabase(w http.ResponseWriter, r *http.Request) {
 		Engine:    database.Engine,
 		StorageGB: database.StorageGB,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "The database record was created, but we couldn't provision it. Please try again or contact support.", err)
+		writeError(w, http.StatusInternalServerError, "Your database was created, but we couldn't finish setting it up. Refresh to check its status.", err)
 		return
 	}
 
@@ -171,7 +171,7 @@ func (app *Application) UpdateDatabase(w http.ResponseWriter, r *http.Request) {
 
 	res, err := app.Supabase.UpdateDatabase(databaseId, userId, *database.Name, *database.StorageGB)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't save the database. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't save the database.", err)
 		return
 	}
 
@@ -181,7 +181,7 @@ func (app *Application) UpdateDatabase(w http.ResponseWriter, r *http.Request) {
 		Engine:    res.Engine,
 		StorageGB: *database.StorageGB,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "The database record was updated, but we couldn't apply the change. Please try again or contact support.", err)
+		writeError(w, http.StatusInternalServerError, "We saved your changes, but couldn't apply them to your database. Refresh to check its status.", err)
 		return
 	}
 }
@@ -206,7 +206,7 @@ func (app *Application) DeleteDatabase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := app.Supabase.DeleteDatabase(databaseId, claims.Subject); err != nil {
-		writeError(w, http.StatusInternalServerError, "Couldn't delete the database. Please try again.", err)
+		writeError(w, http.StatusInternalServerError, "Couldn't delete the database.", err)
 		return
 	}
 
@@ -215,7 +215,7 @@ func (app *Application) DeleteDatabase(w http.ResponseWriter, r *http.Request) {
 		Name:      "db-" + databaseId,
 		Engine:    "postgres",
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "The database record was deleted, but its infrastructure couldn't be cleaned up. Please contact support.", err)
+		writeError(w, http.StatusInternalServerError, "Your database was deleted, but we couldn't fully clean it up.", err)
 		return
 	}
 

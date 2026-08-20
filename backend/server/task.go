@@ -39,7 +39,7 @@ func (app *Application) HandleTaskWS(w http.ResponseWriter, r *http.Request) {
 	taskId := mux.Vars(r)["task_id"]
 
 	if taskId == "" {
-		http.Error(w, "Id is empty", http.StatusBadRequest)
+		http.Error(w, "A task ID is required.", http.StatusBadRequest)
 		return
 	}
 
