@@ -122,7 +122,7 @@ func (app *Application) CreateDatabase(w http.ResponseWriter, r *http.Request) {
 		Engine:    database.Engine,
 		StorageGB: database.StorageGB,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "Your database was created, but we couldn't finish setting it up. Refresh to check its status.", err)
+		writeError(w, http.StatusInternalServerError, "Your database was created, but we couldn't finish setting it up. A refresh will show its current status.", err)
 		return
 	}
 
@@ -181,7 +181,7 @@ func (app *Application) UpdateDatabase(w http.ResponseWriter, r *http.Request) {
 		Engine:    res.Engine,
 		StorageGB: *database.StorageGB,
 	}); err != nil {
-		writeError(w, http.StatusInternalServerError, "We saved your changes, but couldn't apply them to your database. Refresh to check its status.", err)
+		writeError(w, http.StatusInternalServerError, "We saved your changes, but couldn't apply them to your database. A refresh will show its current status.", err)
 		return
 	}
 }

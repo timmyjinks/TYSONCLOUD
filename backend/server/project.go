@@ -223,7 +223,7 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 
 	for i, service := range services {
 		if err := app.Deploy.CreateService(r.Context(), service); err != nil {
-			writeError(w, http.StatusInternalServerError, "Your services were created, but we couldn't start them. Refresh to see which ones are running.", err)
+			writeError(w, http.StatusInternalServerError, "Your services were created, but we couldn't start them. A refresh will show which ones are running.", err)
 			return
 		}
 		rb.deployedServices[i] = struct{}{}
@@ -248,7 +248,7 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 			StorageGB: int32(service.Volume.StorageGB),
 		})
 		if err != nil {
-			writeError(w, http.StatusInternalServerError, "We couldn't attach one of your volumes. Refresh to check its status.", err)
+			writeError(w, http.StatusInternalServerError, "We couldn't attach one of your volumes. A refresh will show its current status.", err)
 			return
 		}
 		rb.volumesAttached[i] = struct{}{}
@@ -256,7 +256,7 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 
 	for j, database := range databases {
 		if err := app.Deploy.CreateDatabase(r.Context(), database); err != nil {
-			writeError(w, http.StatusInternalServerError, "Your databases were created, but we couldn't finish setting them up. Refresh to check their status.", err)
+			writeError(w, http.StatusInternalServerError, "Your databases were created, but we couldn't finish setting them up. A refresh will show their current status.", err)
 			return
 		}
 		rb.deployedDatabases[j] = struct{}{}

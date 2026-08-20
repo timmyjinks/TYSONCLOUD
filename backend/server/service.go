@@ -212,12 +212,12 @@ func (app *Application) CreateService(w http.ResponseWriter, r *http.Request) {
 		if _, statusErr := app.Supabase.UpdateServiceStatus(res.Id, userId, "failed"); statusErr != nil {
 			slog.Error("failed to mark service failed after deploy error", "service_id", res.Id, "err", statusErr)
 		}
-		writeError(w, http.StatusInternalServerError, "Your service was created, but we couldn't start it. Refresh to check its status.", err)
+		writeError(w, http.StatusInternalServerError, "Your service was created, but we couldn't start it. A refresh will show its current status.", err)
 		return
 	}
 
 	if _, err := app.Supabase.UpdateServiceStatus(res.Id, userId, "running"); err != nil {
-		writeError(w, http.StatusInternalServerError, "Your service was started, but we couldn't confirm its status. Refresh to check.", err)
+		writeError(w, http.StatusInternalServerError, "Your service was started, but we couldn't confirm its status. A refresh will show where things stand.", err)
 		return
 	}
 
@@ -290,12 +290,12 @@ func (app *Application) UpdateService(w http.ResponseWriter, r *http.Request) {
 		if _, statusErr := app.Supabase.UpdateServiceStatus(res.Id, userId, "failed"); statusErr != nil {
 			slog.Error("failed to mark service failed after deploy error", "service_id", res.Id, "err", statusErr)
 		}
-		writeError(w, http.StatusInternalServerError, "We saved your changes, but couldn't restart your service. Refresh to check its status.", err)
+		writeError(w, http.StatusInternalServerError, "We saved your changes, but couldn't restart your service. A refresh will show its current status.", err)
 		return
 	}
 
 	if _, err := app.Supabase.UpdateServiceStatus(res.Id, userId, "running"); err != nil {
-		writeError(w, http.StatusInternalServerError, "Your service was restarted, but we couldn't confirm its status. Refresh to check.", err)
+		writeError(w, http.StatusInternalServerError, "Your service was restarted, but we couldn't confirm its status. A refresh will show where things stand.", err)
 		return
 	}
 }

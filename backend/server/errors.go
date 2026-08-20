@@ -51,22 +51,22 @@ func getErrorMessage(internal error) string {
 		status := apiStatus.Status()
 		switch {
 		case apierrors.IsAlreadyExists(internal):
-			return "It already exists. Pick a different name."
+			return "That name is already taken. Please choose a different one."
 		case apierrors.IsForbidden(internal), apierrors.IsUnauthorized(internal):
-			return "You don't have permission to do that."
+			return "You don't currently have permission to do this."
 		case apierrors.IsInvalid(internal):
-			return "One of the provided values isn't allowed."
+			return "One of the provided values isn't allowed. Please review and try again."
 		case apierrors.IsTimeout(internal), apierrors.IsServerTimeout(internal), apierrors.IsTooManyRequests(internal), apierrors.IsServiceUnavailable(internal):
-			return "The system is busy. Try again in a moment."
+			return "We're experiencing high demand right now. Please try again in a moment."
 		case strings.Contains(strings.ToLower(status.Message), "quota"):
-			return "There isn't enough capacity to complete this request. Try again in a moment."
+			return "There isn't enough capacity for this right now. Please try again shortly."
 		}
 	}
 
 	msg := strings.ToLower(strings.TrimSpace(internal.Error()))
 	for _, prefix := range []string{"dial tcp", "dial udp", "connection refused", "connection reset", "i/o timeout", "no such host", "network is unreachable", "lookup "} {
 		if strings.HasPrefix(msg, prefix) {
-			return "There was a connection problem. Try again in a moment."
+			return "A connection problem occurred. Please try again in a moment."
 		}
 	}
 
@@ -105,8 +105,8 @@ func withCause(publicMessage string, internal error) string {
 }
 
 const (
-	msgUnauthorized = "Please sign in again."
+	msgUnauthorized = "Your session has expired. Please sign in again."
 	msgServerError  = "Something unexpected went wrong while completing your request."
-	msgBadRequest   = "That request wasn't valid."
+	msgBadRequest   = "That request wasn't valid. Please check it and try again."
 )
 
