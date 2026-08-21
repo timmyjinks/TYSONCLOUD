@@ -170,7 +170,6 @@ func (app *Application) GetServiceLogs(w http.ResponseWriter, r *http.Request) {
 			return
 		case line, ok := <-lines:
 			if !ok {
-				<-ctx.Done()
 				return
 			}
 			_ = ws.SetWriteDeadline(time.Now().Add(10 * time.Second))
