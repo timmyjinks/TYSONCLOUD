@@ -71,21 +71,6 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: tysoncloud
-  namespace: flux-system
-spec:
-  dependsOn:
-    - name: tc-system
-  interval: 10m
-  path: ./infra/k8s/tysoncloud
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
----
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
   name: cnpg
   namespace: flux-system
 spec:
