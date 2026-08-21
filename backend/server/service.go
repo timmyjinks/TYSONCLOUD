@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/clerk/clerk-sdk-go/v2"
 	clerkjwt "github.com/clerk/clerk-sdk-go/v2/jwt"
@@ -122,9 +124,6 @@ func (app *Application) GetServiceLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// A websocket upgrade has already committed the response by the time
-	// it can fail, so there's no JSON error body possible past this
-	// point — just close the connection.
 	allowedOrigins := parseAllowedOrigins(app.Config.Server.AllowedOrigins)
 	upgrader := websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -142,25 +141,44 @@ func (app *Application) GetServiceLogs(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
 	lines := make(chan string)
 	go func() {
 		defer close(lines)
-		if err := app.Deploy.GetServiceLogs(ctx, deploy.Service{
+		svc := deploy.Service{
 			Namespace: "proj-" + projectId,
 			Name:      service.ResourceName,
-		}, lines); err != nil {
-			slog.Error("log stream failed", "service_id", serviceId, "err", err)
+		}
+		status := strings.ToLower(strings.TrimSpace(service.Status))
+		isDiagnostic := status == "pending" || status == "failed"
+		var logErr error
+		if isDiagnostic {
+			logErr = app.Deploy.GetServiceDiagnosticLogs(ctx, svc, lines)
+		} else {
+			logErr = app.Deploy.GetServiceLogs(ctx, svc, lines)
+		}
+		if logErr != nil && ctx.Err() == nil {
+			slog.Error("log stream failed", "service_id", serviceId, "status", service.Status, "err", logErr)
 		}
 	}()
 
-	for line := range lines {
-		if err := ws.WriteJSON(struct {
-			Message string `json:"message"`
-		}{Message: line}); err != nil {
-			break
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case line, ok := <-lines:
+			if !ok {
+				return
+			}
+			_ = ws.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if err := ws.WriteJSON(struct {
+				Message string `json:"message"`
+			}{Message: line}); err != nil {
+				cancel()
+				return
+			}
 		}
 	}
 }
