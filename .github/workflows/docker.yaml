@@ -1,0 +1,210 @@
+name: build-and-push
+
+on:
+  push:
+    branches:
+      - main
+      - actions
+    paths:
+      - backend/**
+      - frontend/**
+      - infra/k8s/tc-system/**
+      - .github/workflows/docker.yaml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - backend/**
+      - frontend/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/timmyjinks/tysoncloud-backend
+  FRONTEND_IMAGE: ghcr.io/timmyjinks/tysoncloud-frontend
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.meta.outputs.tags }}
+      version: ${{ steps.meta.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.BACKEND_IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=long
+            type=ref,event=branch
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/cmd/deploy/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.FRONTEND_IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=long
+            type=ref,event=branch
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+  update-manifests:
+    needs: [build-backend, build-frontend]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Update image tags in manifests
+        env:
+          SHA: ${{ github.sha }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -e
+          echo "Event: ${{ github.event_name }} ref: ${{ github.ref }} sha: $SHA"
+
+          # metadata-action creates tags:
+          # - ghcr.io/timmyjinks/tysoncloud-backend:sha-<full-sha>
+          # - ghcr.io/timmyjinks/tysoncloud-backend:latest (on main)
+          # - ghcr.io/timmyjinks/tysoncloud-backend:<branch>-<sha> (via type=ref)
+          # We use the deterministic sha tag for GitOps.
+          BACKEND_TAG="sha-${SHA}"
+          FRONTEND_TAG="sha-${SHA}"
+
+          echo "Using tags: backend=$BACKEND_TAG frontend=$FRONTEND_TAG"
+
+          update_image() {
+            file="$1"
+            image="$2"
+            tag="$3"
+            echo "Updating $file -> $image:$tag"
+            # Replace image line, preserving yaml structure
+            # Matches: image: ghcr.io/timmyjinks/tysoncloud-backend[:tag]
+            sed -i -E "s|image: ${image}.*|image: ${image}:${tag}|g" "$file"
+            grep -q "image: ${image}:${tag}" "$file" && echo "  OK" || (echo "  FAILED for $file" && cat "$file" && exit 1)
+          }
+
+          if [ "$REF_NAME" = "main" ]; then
+            echo "Branch is main -> updating prod manifests"
+            update_image "infra/k8s/tc-system/tysoncloud-backend.yaml" "${{ env.BACKEND_IMAGE }}" "$BACKEND_TAG"
+            update_image "infra/k8s/tc-system/tysoncloud-frontend.yaml" "${{ env.FRONTEND_IMAGE }}" "$FRONTEND_TAG"
+          else
+            echo "Branch is $REF_NAME -> updating dev manifests"
+            update_image "infra/k8s/tc-system/tysoncloud-backend-dev.yaml" "${{ env.BACKEND_IMAGE }}" "$BACKEND_TAG"
+            update_image "infra/k8s/tc-system/tysoncloud-frontend-dev.yaml" "${{ env.FRONTEND_IMAGE }}" "$FRONTEND_TAG"
+          fi
+
+          echo "--- diff ---"
+          git diff -- infra/k8s/tc-system/
+
+      - name: Commit and push manifests
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- infra/k8s/tc-system/; then
+            echo "No manifest changes to commit"
+            exit 0
+          fi
+
+          git add infra/k8s/tc-system/tysoncloud-backend.yaml infra/k8s/tc-system/tysoncloud-frontend.yaml infra/k8s/tc-system/tysoncloud-backend-dev.yaml infra/k8s/tc-system/tysoncloud-frontend-dev.yaml
+
+          # Only commit if staged changes exist
+          if git diff --cached --quiet; then
+            echo "No staged changes"
+            exit 0
+          fi
+
+          git commit -m "chore: update image tags to sha-${{ github.sha }} [skip ci]"
+          git push
