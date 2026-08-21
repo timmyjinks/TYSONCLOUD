@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/clerk/clerk-sdk-go/v2"
 	clerkjwt "github.com/clerk/clerk-sdk-go/v2/jwt"
@@ -142,25 +144,84 @@ func (app *Application) GetServiceLogs(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	// Tie log streaming to both the request and the websocket lifetime.
+	// Using r.Context() alone would not notice a websocket close when the
+	// diagnostic snapshot parks with no further writes (the reported
+	// "reconnects every time for failed" loop). So we also pump reads
+	// and send periodic pings to keep the connection open.
+	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
+
+	ws.SetReadLimit(1 << 20)
+	_ = ws.SetReadDeadline(time.Now().Add(60 * time.Second))
+	ws.SetPongHandler(func(string) error {
+		_ = ws.SetReadDeadline(time.Now().Add(60 * time.Second))
+		return nil
+	})
+	go func() {
+		defer cancel()
+		for {
+			if _, _, err := ws.NextReader(); err != nil {
+				return
+			}
+		}
+	}()
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				_ = ws.SetWriteDeadline(time.Now().Add(10 * time.Second))
+				if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
+					cancel()
+					return
+				}
+			}
+		}
+	}()
 
 	lines := make(chan string)
 	go func() {
 		defer close(lines)
-		if err := app.Deploy.GetServiceLogs(ctx, deploy.Service{
+		svc := deploy.Service{
 			Namespace: "proj-" + projectId,
 			Name:      service.ResourceName,
-		}, lines); err != nil {
-			slog.Error("log stream failed", "service_id", serviceId, "err", err)
+		}
+		status := strings.ToLower(strings.TrimSpace(service.Status))
+		isDiagnostic := status == "pending" || status == "failed"
+		var logErr error
+		if isDiagnostic {
+			logErr = app.Deploy.GetServiceDiagnosticLogs(ctx, svc, lines)
+		} else {
+			logErr = app.Deploy.GetServiceLogs(ctx, svc, lines)
+		}
+		if logErr != nil && ctx.Err() == nil {
+			slog.Error("log stream failed", "service_id", serviceId, "status", service.Status, "err", logErr)
 		}
 	}()
 
-	for line := range lines {
-		if err := ws.WriteJSON(struct {
-			Message string `json:"message"`
-		}{Message: line}); err != nil {
-			break
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case line, ok := <-lines:
+			if !ok {
+				// Diagnostic snapshot is finite; keep the websocket open
+				// instead of closing it (which triggers the frontend's
+				// reconnect loop). Park until the client disconnects.
+				<-ctx.Done()
+				return
+			}
+			_ = ws.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if err := ws.WriteJSON(struct {
+				Message string `json:"message"`
+			}{Message: line}); err != nil {
+				cancel()
+				return
+			}
 		}
 	}
 }
