@@ -1,11 +1,9 @@
 package kubernetes
 
 import (
-	"errors"
-
-	"github.com/timmyjinks/tysoncloud/util"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+
 	"k8s.io/client-go/rest"
 	gatewayclient "sigs.k8s.io/gateway-api/pkg/client/clientset/versioned"
 )
@@ -17,7 +15,7 @@ type KubernetesService struct {
 	dynamicClient *dynamic.DynamicClient
 }
 
-func NewKubernetesService(kubeconfigPath string) (*KubernetesService, error) {
+func NewKubernetesService(kubeconfigPath string, clusterIp string) (*KubernetesService, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, err
@@ -27,13 +25,8 @@ func NewKubernetesService(kubeconfigPath string) (*KubernetesService, error) {
 	gatewayClient := gatewayclient.NewForConfigOrDie(config)
 	dynamicClient := dynamic.NewForConfigOrDie(config)
 
-	ip, err := util.GetLocalIP()
-	if err != nil {
-		return nil, errors.New("Cluster IP not found")
-	}
-
 	return &KubernetesService{
-		ClusterIP:     ip,
+		ClusterIP:     clusterIp,
 		clientset:     clientset,
 		gatewayClient: gatewayClient,
 		dynamicClient: dynamicClient,

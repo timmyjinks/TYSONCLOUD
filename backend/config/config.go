@@ -19,6 +19,7 @@ type Server struct {
 	Addr           string `env:"ADDR"`
 	AllowedOrigins string `env:"ALLOWED_ORIGINS"`
 	ClerkApiKey    string `env:"CLERK_API_KEY"`
+	ClusterIp      string `env:"CLUSTER_IP"`
 }
 
 type Supabase struct {
@@ -37,6 +38,7 @@ func Load() (Config, error) {
 			Addr:           getString("ADDR", ":8080"),
 			AllowedOrigins: getString("ALLOWED_ORIGINS", "http://localhost:3000"),
 			ClerkApiKey:    getStringOrDie("CLERK_API_KEY"),
+			ClusterIp:      getString("CLUSTER_IP", "192.168.0.18"),
 		},
 		Supabase: Supabase{
 			ProjectURL: getStringOrDie("SUPABASE_URL"),

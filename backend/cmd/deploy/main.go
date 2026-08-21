@@ -24,7 +24,7 @@ func main() {
 	}
 	supabaseService := store.NewSupabaseStore(supabaseCli)
 
-	kubernetesService, err := kubernetes.NewKubernetesService(cfg.KubeConfig)
+	kubernetesService, err := kubernetes.NewKubernetesService(cfg.KubeConfig, cfg.Server.ClusterIp)
 	if err != nil {
 		panic(err)
 	}
