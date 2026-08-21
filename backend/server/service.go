@@ -124,9 +124,6 @@ func (app *Application) GetServiceLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// A websocket upgrade has already committed the response by the time
-	// it can fail, so there's no JSON error body possible past this
-	// point — just close the connection.
 	allowedOrigins := parseAllowedOrigins(app.Config.Server.AllowedOrigins)
 	upgrader := websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -144,44 +141,8 @@ func (app *Application) GetServiceLogs(w http.ResponseWriter, r *http.Request) {
 	}
 	defer ws.Close()
 
-	// Tie log streaming to both the request and the websocket lifetime.
-	// Using r.Context() alone would not notice a websocket close when the
-	// diagnostic snapshot parks with no further writes (the reported
-	// "reconnects every time for failed" loop). So we also pump reads
-	// and send periodic pings to keep the connection open.
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
-
-	ws.SetReadLimit(1 << 20)
-	_ = ws.SetReadDeadline(time.Now().Add(60 * time.Second))
-	ws.SetPongHandler(func(string) error {
-		_ = ws.SetReadDeadline(time.Now().Add(60 * time.Second))
-		return nil
-	})
-	go func() {
-		defer cancel()
-		for {
-			if _, _, err := ws.NextReader(); err != nil {
-				return
-			}
-		}
-	}()
-	go func() {
-		ticker := time.NewTicker(30 * time.Second)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				_ = ws.SetWriteDeadline(time.Now().Add(10 * time.Second))
-				if err := ws.WriteMessage(websocket.PingMessage, nil); err != nil {
-					cancel()
-					return
-				}
-			}
-		}
-	}()
 
 	lines := make(chan string)
 	go func() {
@@ -209,9 +170,6 @@ func (app *Application) GetServiceLogs(w http.ResponseWriter, r *http.Request) {
 			return
 		case line, ok := <-lines:
 			if !ok {
-				// Diagnostic snapshot is finite; keep the websocket open
-				// instead of closing it (which triggers the frontend's
-				// reconnect loop). Park until the client disconnects.
 				<-ctx.Done()
 				return
 			}
