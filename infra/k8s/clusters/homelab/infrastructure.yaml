@@ -57,7 +57,7 @@ spec:
     - name: metallb
 
   interval: 10m
-  path: ./infra/k8s/metallb-config
+  path: ./infra/k8s/metallb-system-config
   prune: true
   wait: true
   timeout: 10m
