@@ -1,8 +1,8 @@
 # TYSONCLOUD
 
-> Push a Docker image, get a running service with a public domain + TLS, managed Postgres, and persistent volumes — without managing servers.
+> Push a Docker image, get a running service with a public domain + TLS, managed Postgres, and persistent volumes without managing servers.
 
-TYSONCLOUD is a self-hosted deploy platform inspired by Railway and Render. Create a project, deploy containerized services and CloudNativePG-backed databases, attach volumes, and expose custom domains — all through a single API and dashboard.
+TYSONCLOUD is a self-hosted deploy platform inspired by Railway and Render. Create a project, deploy containerized services and CloudNativePG-backed databases, attach volumes, and expose custom domains all through a single API and dashboard.
 
 Live: **https://tysoncloud.tysonjenkins.dev**
 
@@ -10,12 +10,12 @@ Live: **https://tysoncloud.tysonjenkins.dev**
 
 ## Features
 
-- **Projects & Services** — Group deployments into projects; each service is a Kubernetes `Deployment` + `Service` driven by a user-provided Docker image.
-- **Managed Postgres** — One-click databases via [CloudNativePG](https://cloudnative-pg.io/), scoped to a project.
-- **Persistent Volumes** — Attach storage to services.
-- **Custom Domains** — Automatic TLS via [cert-manager](https://cert-manager.io/) + [NGINX Gateway Fabric](https://github.com/nginx/nginx-gateway-fabric) / Gateway API; Cloudflare DNS integration.
-- **Auth** — [Clerk](https://clerk.com/) on both frontend and backend (header-based auth via `clerk-sdk-go`).
-- **WebSocket build logs** — Stream deploy logs to the dashboard.
+- **Projects & Services** - Group deployments into projects; each service is a Kubernetes `Deployment` + `Service` driven by a user-provided Docker image.
+- **Managed Postgres** - One-click databases via [CloudNativePG](https://cloudnative-pg.io/), scoped to a project.
+- **Persistent Volumes** - Attach storage to services.
+- **Custom Domains** - Automatic TLS via [cert-manager](https://cert-manager.io/) + [NGINX Gateway Fabric](https://github.com/nginx/nginx-gateway-fabric) / Gateway API; Cloudflare DNS integration.
+- **Auth** - [Clerk](https://clerk.com/) on both frontend and backend (header-based auth via `clerk-sdk-go`).
+- **WebSocket build logs** - Stream deploy logs to the dashboard.
 
 ---
 
@@ -45,14 +45,14 @@ Live: **https://tysoncloud.tysonjenkins.dev**
 │   ├── cmd/deploy/     Entrypoint + Dockerfile (distroless)
 │   ├── server/         HTTP handlers, routing, Clerk + CORS middleware
 │   ├── store/          Supabase/PostgREST persistence layer
-│   └── kubernetes/     k8s client — deployments, services, Gateway API routes
+│   └── kubernetes/     k8s client deployments, services, Gateway API routes
 ├── frontend/           TanStack Router SPA (Vite, React 19, Tailwind CSS 4, Clerk)
 │   └── src/routes/     File-based routes → src/routeTree.gen.ts (generated)
 ├── infra/
 │   ├── k8s/            Cluster manifests (CNPG, MetalLB, NGINX Gateway, cert-manager, tc-system)
 │   └── caddy/          Caddy reverse-proxy config
 ├── docker-compose.yaml Local dev stack (backend + frontend)
-└── .github/workflows/  CI — build & push images to GHCR
+└── .github/workflows/  CI build & push images to GHCR
 ```
 
 ---
@@ -136,7 +136,7 @@ pnpm dev                     # http://localhost:3000
 pnpm build && pnpm preview   # production preview
 ```
 
-`pnpm dev` / `pnpm build` generate `src/routeTree.gen.ts` from `src/routes/` via the TanStack Router Vite plugin — do not edit it by hand.
+`pnpm dev` / `pnpm build` generate `src/routeTree.gen.ts` from `src/routes/` via the TanStack Router Vite plugin do not edit it by hand.
 
 ---
 
@@ -165,7 +165,7 @@ All routes except `GET /projects/{id}/services/{id}/logs` require a `Authorizati
 
 ## Deployment
 
-CI is defined in `.github/workflows/docker.yaml` — on pushes to `main` (and manual dispatch) it builds and pushes multi-arch images to `ghcr.io/timmyjinks/tysoncloud-backend` and `ghcr.io/timmyjinks/tysoncloud-frontend` (tags via `docker/metadata-action`).
+CI is defined in `.github/workflows/docker.yaml` on pushes to `main` (and manual dispatch) it builds and pushes multi-arch images to `ghcr.io/timmyjinks/tysoncloud-backend` and `ghcr.io/timmyjinks/tysoncloud-frontend` (tags via `docker/metadata-action`).
 
 Kubernetes manifests live in `infra/k8s/` (per-component overlays for `cert-manager`, `cnpg-system`, `metallb-system`, `nginx-gateway`, `tc-system`, and cluster definitions in `infra/k8s/clusters/`).
 
