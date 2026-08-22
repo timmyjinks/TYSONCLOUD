@@ -28,6 +28,7 @@ export type ServiceCreateRequest = {
   name: string;
   image: string;
   port: number;
+  domain?: string | null;
   env?: string;
 };
 
@@ -35,6 +36,7 @@ export type ServiceUpdateRequest = {
   name?: string;
   image?: string;
   port?: number;
+  domain?: string | null;
   env?: string;
 };
 
