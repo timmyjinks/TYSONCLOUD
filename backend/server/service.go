@@ -213,7 +213,7 @@ func (app *Application) CreateService(w http.ResponseWriter, r *http.Request) {
 
 	userId := claims.Subject
 
-	res, err := app.Supabase.CreateService(userId, projectId, service.Name, service.Image, service.Port)
+	res, err := app.Supabase.CreateService(userId, projectId, service.Name, service.Image, service.Domain, service.Port)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Couldn't create the service.", err)
 		return
@@ -291,7 +291,7 @@ func (app *Application) UpdateService(w http.ResponseWriter, r *http.Request) {
 
 	userId := claims.Subject
 
-	res, err := app.Supabase.UpdateService(serviceId, userId, *service.Name, *service.Image, *service.Port)
+	res, err := app.Supabase.UpdateService(serviceId, userId, *service.Name, *service.Image, service.Domain, *service.Port)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Couldn't save the service.", err)
 		return
