@@ -4,18 +4,11 @@ on:
   push:
     branches:
       - main
-      - actions
     paths:
       - backend/**
       - frontend/**
       - infra/k8s/tc-system/**
       - .github/workflows/docker.yaml
-  pull_request:
-    branches:
-      - main
-    paths:
-      - backend/**
-      - frontend/**
   workflow_dispatch:
 
 permissions:
@@ -77,11 +70,15 @@ jobs:
           context: ./backend
           file: ./backend/cmd/deploy/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=gha,scope=backend-main
+            type=registry,ref=${{ env.BACKEND_IMAGE }}:buildcache
+          cache-to: |
+            type=gha,mode=max,scope=backend-main
+            type=registry,ref=${{ env.BACKEND_IMAGE }}:buildcache,mode=max
           provenance: false
 
   build-frontend:
@@ -125,16 +122,19 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=gha,scope=frontend-main
+            type=registry,ref=${{ env.FRONTEND_IMAGE }}:buildcache
+          cache-to: |
+            type=gha,mode=max,scope=frontend-main
+            type=registry,ref=${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
           provenance: false
 
   update-manifests:
     needs: [build-backend, build-frontend]
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: write

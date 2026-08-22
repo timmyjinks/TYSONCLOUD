@@ -1,1 +1,11 @@
 .env
+.git
+.gitignore
+*.md
+.DS_Store
+.env.local
+tmp/
+bin/
+vendor/
+# keep context small - only Go source needed for build
+__debug_bin*
