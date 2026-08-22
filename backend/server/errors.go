@@ -110,3 +110,27 @@ const (
 	msgBadRequest   = "That request wasn't valid. Please check it and try again."
 )
 
+func isDomainTakenError(err error) bool {
+	if err == nil {
+		return false
+	}
+	lower := strings.ToLower(err.Error())
+	return strings.Contains(lower, "duplicate") && (strings.Contains(lower, "domain") || strings.Contains(lower, "public_domain"))
+}
+
+func isDomainValidationError(err error) bool {
+	if err == nil {
+		return false
+	}
+	lower := strings.ToLower(err.Error())
+	return strings.Contains(lower, "domain") && (strings.Contains(lower, "check constraint") || strings.Contains(lower, "invalid") || strings.Contains(lower, "violates"))
+}
+
+func domainValidationMessage(err error) string {
+	lower := strings.ToLower(err.Error())
+	if strings.Contains(lower, "length") || strings.Contains(lower, "too long") {
+		return "Custom domain must be 1-63 characters."
+	}
+	return "Custom domain must be 1-63 characters, lowercase letters, numbers, and hyphens only, and cannot start or end with a hyphen."
+}
+

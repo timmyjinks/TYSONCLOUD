@@ -73,10 +73,11 @@ type ServiceResponse struct {
 }
 
 type ServiceCreateRequest struct {
-	Name  string `json:"name"`
-	Image string `json:"image"`
-	Port  int32  `json:"port"`
-	Env   string `json:"env"`
+	Name   string  `json:"name"`
+	Image  string  `json:"image"`
+	Port   int32   `json:"port"`
+	Domain *string `json:"domain"`
+	Env    string  `json:"env"`
 }
 
 type ServiceCreateResponse struct {
@@ -84,10 +85,11 @@ type ServiceCreateResponse struct {
 }
 
 type ServiceUpdateRequest struct {
-	Name  *string `json:"name,omitempty"`
-	Image *string `json:"image,omitempty"`
-	Port  *int32  `json:"port,omitempty"`
-	Env   *string `json:"env"`
+	Name   *string `json:"name,omitempty"`
+	Image  *string `json:"image,omitempty"`
+	Port   *int32  `json:"port,omitempty"`
+	Domain *string `json:"domain"`
+	Env    *string `json:"env"`
 }
 
 type ServiceDeleteRequest struct {

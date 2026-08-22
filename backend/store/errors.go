@@ -12,8 +12,12 @@ func rpcError(op string, pgErr PostgrestError) error {
 func GetPostgresErrorMessage(msg string) (string, bool) {
 	lower := strings.ToLower(msg)
 	switch {
+	case strings.Contains(lower, "duplicate key value") && (strings.Contains(lower, "public_domain") || strings.Contains(lower, "domain")):
+		return "That domain is already taken. Please choose a different one.", true
 	case strings.Contains(lower, "duplicate key value"):
 		return "That name is already taken. Please choose a different one.", true
+	case strings.Contains(lower, "violates check constraint") && strings.Contains(lower, "domain"):
+		return "Custom domain must be 1-63 characters, lowercase letters, numbers, and hyphens only, and cannot start or end with a hyphen.", true
 	case strings.Contains(lower, "violates check constraint"):
 		return "One of the provided values isn't allowed. Please review and try again.", true
 	case strings.Contains(lower, "violates foreign key constraint"):

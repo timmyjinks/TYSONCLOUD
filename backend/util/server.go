@@ -7,6 +7,7 @@ import (
 
 var nameRegex = regexp.MustCompile(`^[A-Za-z-]+$`)
 var envRegex = regexp.MustCompile(`\A(?:[A-Za-z_][A-Za-z0-9_]*=[^\n]*)*(?:\n[A-Za-z_][A-Za-z0-9_]*=[^\n]*)*\z`)
+var domainLabelRegex = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)
 
 func validateName(name string) (bool, error) {
 	if len(name) > 24 {
@@ -14,6 +15,30 @@ func validateName(name string) (bool, error) {
 	}
 
 	return nameRegex.MatchString(name), nil
+}
+
+func ValidateDomainLabel(label string) (bool, error) {
+	if len(label) == 0 || len(label) > 63 {
+		return false, nil
+	}
+	return domainLabelRegex.MatchString(label), nil
+}
+
+// NormalizeDomain extracts the subdomain fragment from a user-supplied domain.
+// Frontend sends just the fragment ("ohyah"), but we also accept full forms like
+// "tc-ohyah.tysonjenkins.dev" or "ohyah.domain.com" and extract "ohyah".
+func NormalizeDomain(raw string) string {
+	v := strings.TrimSpace(strings.ToLower(raw))
+	if v == "" {
+		return ""
+	}
+	if strings.HasPrefix(v, "tc-") {
+		v = strings.TrimPrefix(v, "tc-")
+	}
+	if idx := strings.Index(v, "."); idx != -1 {
+		v = v[:idx]
+	}
+	return strings.TrimSpace(v)
 }
 
 func ValidateEnv(env string) (bool, error) {

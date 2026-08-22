@@ -210,11 +210,33 @@ func (app *Application) CreateService(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Environment variables must be one KEY=value pair per line.", err)
 		return
 	}
+	if service.Domain != nil {
+		normalized := util.NormalizeDomain(*service.Domain)
+		if normalized == "" {
+			service.Domain = nil
+		} else {
+			if ok, _ := util.ValidateDomainLabel(normalized); !ok {
+				writeError(w, http.StatusBadRequest, "Custom domain must be 1-63 characters, lowercase letters, numbers, and hyphens only, and cannot start or end with a hyphen.", nil)
+				return
+			}
+			service.Domain = &normalized
+		}
+	}
 
 	userId := claims.Subject
 
-	res, err := app.Supabase.CreateService(userId, projectId, service.Name, service.Image, service.Port)
+	domainRequested := service.Domain != nil
+
+	res, err := app.Supabase.CreateService(userId, projectId, service.Name, service.Image, service.Domain, service.Port)
 	if err != nil {
+		if domainRequested && isDomainTakenError(err) {
+			writeError(w, http.StatusConflict, "That domain is already taken. Please choose a different one.", err)
+			return
+		}
+		if domainRequested && isDomainValidationError(err) {
+			writeError(w, http.StatusBadRequest, domainValidationMessage(err), err)
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "Couldn't create the service.", err)
 		return
 	}
@@ -289,10 +311,33 @@ func (app *Application) UpdateService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if service.Domain != nil {
+		normalized := util.NormalizeDomain(*service.Domain)
+		if normalized == "" {
+			service.Domain = nil
+		} else {
+			if ok, _ := util.ValidateDomainLabel(normalized); !ok {
+				writeError(w, http.StatusBadRequest, "Custom domain must be 1-63 characters, lowercase letters, numbers, and hyphens only, and cannot start or end with a hyphen.", nil)
+				return
+			}
+			service.Domain = &normalized
+		}
+	}
+
 	userId := claims.Subject
 
-	res, err := app.Supabase.UpdateService(serviceId, userId, *service.Name, *service.Image, *service.Port)
+	domainRequested := service.Domain != nil
+
+	res, err := app.Supabase.UpdateService(serviceId, userId, *service.Name, *service.Image, service.Domain, *service.Port)
 	if err != nil {
+		if domainRequested && isDomainTakenError(err) {
+			writeError(w, http.StatusConflict, "That domain is already taken. Please choose a different one.", err)
+			return
+		}
+		if domainRequested && isDomainValidationError(err) {
+			writeError(w, http.StatusBadRequest, domainValidationMessage(err), err)
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "Couldn't save the service.", err)
 		return
 	}
