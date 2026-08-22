@@ -20,6 +20,8 @@ type ResourceRowProps = {
   /** domain text — colored as a link when href is present, muted otherwise (e.g. "internal") */
   domain: string;
   domainHref?: string;
+  /** private/internal domain for services */
+  privateDomain?: string;
   detailHref: string;
   onUpdate: () => void;
   onDelete: () => void;
@@ -38,6 +40,7 @@ export function ResourceRow({
   size,
   domain,
   domainHref,
+  privateDomain,
   detailHref,
   onUpdate,
   onDelete,
@@ -75,12 +78,18 @@ export function ResourceRow({
 
       <span className="w-24 shrink-0">{status && <StatusPill status={status} />}</span>
 
-      <span className="flex-1">
-        <span className="block truncate font-mono text-base text-[var(--color-text-faint)]">
+      <span className="flex-1 min-w-0">
+        <span
+          title={runtime}
+          className="block truncate font-mono text-base text-[var(--color-text-faint)]"
+        >
           {runtime}
         </span>
         {subtitle && (
-          <span className="mt-0.5 block truncate text-sm text-[var(--color-text-faint)]">
+          <span
+            title={subtitle}
+            className="mt-0.5 block truncate text-sm text-[var(--color-text-faint)]"
+          >
             {subtitle}
           </span>
         )}
@@ -90,18 +99,28 @@ export function ResourceRow({
         {size}
       </span>
 
-      <span className="w-52 shrink-0 truncate text-right font-mono text-base">
-        {domainHref ? (
-          <a
-            href={domainHref}
-            target="_blank"
-            rel="noreferrer"
-            className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+      <span className="w-52 shrink-0 text-right font-mono text-base">
+        <span title={domain} className="block truncate">
+          {domainHref ? (
+            <a
+              href={domainHref}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+            >
+              {domain}
+            </a>
+          ) : (
+            <span className="text-[var(--color-text-faint)]">{domain}</span>
+          )}
+        </span>
+        {privateDomain && (
+          <span
+            title={privateDomain}
+            className="mt-0.5 block truncate text-xs text-[var(--color-text-faint)]"
           >
-            {domain}
-          </a>
-        ) : (
-          <span className="text-[var(--color-text-faint)]">{domain}</span>
+            {privateDomain}
+          </span>
         )}
       </span>
 
