@@ -194,7 +194,7 @@ func (app *Application) ConfigProject(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	for _, service := range config.Services {
-		res, err := app.Supabase.CreateService(userId, projectId, service.Name, service.Image, int32(service.Port))
+		res, err := app.Supabase.CreateService(userId, projectId, service.Name, service.Image, nil, int32(service.Port))
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "Couldn't create one of the services.", err)
 			return
