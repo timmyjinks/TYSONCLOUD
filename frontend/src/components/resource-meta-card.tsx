@@ -24,16 +24,17 @@ export function ResourceMetaCard({ meta }: ResourceMetaCardProps) {
           key={row.label}
           className="flex items-center justify-between gap-4 px-5 py-3.5"
         >
-          <dt className="text-base text-[var(--color-text-faint)]">{row.label}</dt>
+          <dt className="shrink-0 text-base text-[var(--color-text-faint)]">{row.label}</dt>
           <dd
+            title={row.value}
             className={cn(
-              "min-w-0 truncate text-base text-[var(--color-text)]",
+              "min-w-0 flex-1 truncate text-right text-base text-[var(--color-text)]",
               row.mono && "font-mono",
               row.danger && "text-[var(--color-accent)]",
             )}
           >
             {row.status ? (
-              <span className="flex items-center gap-1.5 capitalize">
+              <span className="flex items-center justify-end gap-1.5 capitalize">
                 <StatusDot status={row.value} />
                 {row.value}
               </span>
@@ -42,17 +43,22 @@ export function ResourceMetaCard({ meta }: ResourceMetaCardProps) {
                 href={row.href}
                 target="_blank"
                 rel="noreferrer"
-                className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
+                title={row.value}
+                className="truncate text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]"
               >
                 {row.value}
               </a>
             ) : row.copyable ? (
-              <span className="flex min-w-0 items-center gap-2">
-                <span className="truncate">{row.value}</span>
+              <span className="flex min-w-0 items-center justify-end gap-2">
+                <span title={row.value} className="min-w-0 truncate text-right">
+                  {row.value}
+                </span>
                 <CopyButton value={row.value} label={`Copy ${row.label}`} className="shrink-0" />
               </span>
             ) : (
-              row.value
+              <span title={row.value} className="block truncate text-right">
+                {row.value}
+              </span>
             )}
           </dd>
         </div>
