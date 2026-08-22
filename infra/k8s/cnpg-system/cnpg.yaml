@@ -1,7 +1,7 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
-  name: cnpg
+  name: cloudnative-pg
   namespace: flux-system
 spec:
   url: https://cloudnative-pg.github.io/charts
@@ -17,11 +17,11 @@ spec:
   targetNamespace: cnpg-system
   chart:
     spec:
-      chart: cnpg
+      chart: cloudnative-pg
       version: "0.27.x"
       sourceRef:
         kind: HelmRepository
-        name: cnpg
+        name: cloudnative-pg
         namespace: flux-system
   install:
     createNamespace: true
