@@ -33,28 +33,3 @@ spec:
         certificateRefs:
           - name: gateway-tls-secret
             kind: Secret
-    - name: http-wildcard-dev
-      port: 80
-      protocol: HTTP
-      hostname: "*.tysonjenkins.test"
-      allowedRoutes:
-        namespaces:
-          from: Selector
-          selector:
-            matchLabels:
-              managed-by: tysoncloud
-    - name: https-wildcard-dev
-      port: 443
-      hostname: "*.tysonjenkins.test"
-      protocol: HTTPS
-      allowedRoutes:
-        namespaces:
-          from: Selector
-          selector:
-            matchLabels:
-              managed-by: tysoncloud
-      tls:
-        mode: Terminate
-        certificateRefs:
-          - name: gateway-tls-secret
-            kind: Secret

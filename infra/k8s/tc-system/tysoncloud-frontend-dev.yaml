@@ -8,8 +8,8 @@ spec:
     - name: tysoncloud-gateway
       namespace: tc-system
   hostnames:
-    - "tc.tysonjenkins.test"
-    - "tysoncloud.tysonjenkins.test"
+    - "app-tc.tysonjenkins.dev"
+    - "app-tysoncloud.tysonjenkins.dev"
   rules:
     - matches:
         - path:

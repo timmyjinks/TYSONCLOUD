@@ -8,8 +8,8 @@ spec:
     - name: tysoncloud-gateway
       namespace: tc-system
   hostnames:
-    - "tc-api.tysonjenkins.test"
-    - "tysoncloud-api.tysonjenkins.test"
+    - "app-tc-api.tysonjenkins.dev"
+    - "app-tysoncloud-api.tysonjenkins.dev"
   rules:
     - matches:
         - path:
@@ -102,3 +102,5 @@ spec:
                 secretKeyRef:
                   key: CLOUDFLARE_ZONE_ID
                   name: tysoncloud-backend-dev
+            - name: GITHUB_APP_SLUG
+              value: tysoncloud
