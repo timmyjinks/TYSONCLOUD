@@ -67,11 +67,6 @@ spec:
                 secretKeyRef:
                   key: CLERK_API_KEY
                   name: tysoncloud-backend-dev
-            - name: CLOUDFLARE_BASE_DOMAIN
-              valueFrom:
-                secretKeyRef:
-                  key: CLOUDFLARE_BASE_DOMAIN
-                  name: tysoncloud-backend-dev
             - name: SUPABASE_URL
               valueFrom:
                 secretKeyRef:
@@ -82,25 +77,17 @@ spec:
                 secretKeyRef:
                   key: SUPABASE_API_KEY
                   name: tysoncloud-backend-dev
-            - name: CLOUDFLARE_API_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: CLOUDFLARE_API_TOKEN
-                  name: tysoncloud-backend-dev
-            - name: CLOUDFLARE_TUNNEL_ID
-              valueFrom:
-                secretKeyRef:
-                  key: CLOUDFLARE_TUNNEL_ID
-                  name: tysoncloud-backend-dev
-            - name: CLOUDFLARE_ACCOUNT_ID
-              valueFrom:
-                secretKeyRef:
-                  key: CLOUDFLARE_ACCOUNT_ID
-                  name: tysoncloud-backend-dev
-            - name: CLOUDFLARE_ZONE_ID
-              valueFrom:
-                secretKeyRef:
-                  key: CLOUDFLARE_ZONE_ID
-                  name: tysoncloud-backend-dev
             - name: GITHUB_APP_SLUG
               value: tysoncloud
+            - name: GITHUB_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  key: GITHUB_APP_ID
+                  name: tysoncloud-backend-dev
+                  optional: true
+            - name: GITHUB_APP_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: GITHUB_APP_PRIVATE_KEY
+                  name: tysoncloud-backend-dev
+                  optional: true
