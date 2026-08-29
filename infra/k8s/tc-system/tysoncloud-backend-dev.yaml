@@ -60,7 +60,7 @@ spec:
             - name: REGISTRY_URL
               value: registry.tc-system.svc.cluster.local:5000
             - name: BUILDKIT_HOST
-              value: tcp://localhost:1234
+              value: tcp://buildkitd:1234
             - name: REGISTRY_INSECURE
               value: "true"
             - name: ALLOWED_ORIGINS
